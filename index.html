@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GL Financeiro | Mentoria de Organização Financeira</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+  :root{
+    --navy:#1F3864;
+    --navy-dark:#152A4B;
+    --gold:#B08D57;
+    --gold-light:#D9C39A;
+    --cream:#FBF9F5;
+    --card:#FFFFFF;
+    --line:#E7E2D8;
+    --text:#26241F;
+    --muted:#767267;
+    --green:#2E7D46;
+    --red:#B3402A;
+    --shadow: 0 8px 24px rgba(31,56,100,0.08);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Inter',sans-serif;background:var(--cream);color:var(--text);}
+  h1,h2,h3,.display{font-family:'Fraunces',serif;}
+  button{font-family:'Inter',sans-serif;cursor:pointer;}
+  input,select{font-family:'Inter',sans-serif;}
+
+  /* ---------- LOGIN ---------- */
+  #loginScreen{
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(160deg,var(--navy) 0%, var(--navy-dark) 65%);
+    padding:24px;
+  }
+  .login-card{
+    background:var(--card);width:100%;max-width:400px;border-radius:14px;
+    padding:40px 36px;box-shadow:0 20px 60px rgba(0,0,0,0.35);
+  }
+  .login-brand{text-align:center;margin-bottom:28px;}
+  .login-brand .eyebrow{letter-spacing:.14em;text-transform:uppercase;font-size:11px;color:var(--gold);font-weight:600;}
+  .login-brand h1{font-size:28px;color:var(--navy);margin:6px 0 4px;}
+  .login-brand p{font-size:13px;color:var(--muted);margin:0;}
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:12.5px;font-weight:600;color:var(--navy);margin-bottom:6px;}
+  .field input{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:8px;font-size:14.5px;background:#fff;}
+  .field input:focus{outline:none;border-color:var(--gold);}
+  .btn-primary{
+    width:100%;padding:12px;border:none;border-radius:8px;background:var(--navy);
+    color:#fff;font-weight:600;font-size:14.5px;margin-top:6px;transition:background .15s;
+  }
+  .btn-primary:hover{background:var(--navy-dark);}
+  .login-toggle{text-align:center;margin-top:16px;font-size:13px;color:var(--muted);}
+  .login-toggle a{color:var(--gold);cursor:pointer;font-weight:600;text-decoration:none;}
+  #loginError{color:var(--red);font-size:12.5px;margin-top:10px;text-align:center;min-height:16px;}
+
+  /* ---------- APP SHELL ---------- */
+  #appShell{display:none;min-height:100vh;}
+  .sidebar{
+    width:230px;background:var(--navy);color:#fff;position:fixed;top:0;left:0;bottom:0;
+    display:flex;flex-direction:column;padding:26px 0;
+  }
+  .sidebar-brand{padding:0 22px 22px;border-bottom:1px solid rgba(255,255,255,0.12);margin-bottom:14px;}
+  .sidebar-brand .eyebrow{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-light);font-weight:600;}
+  .sidebar-brand h2{font-size:19px;margin:4px 0 0;}
+  .nav-item{
+    display:flex;align-items:center;gap:10px;padding:12px 22px;font-size:14px;font-weight:500;
+    color:rgba(255,255,255,0.75);cursor:pointer;border-left:3px solid transparent;transition:.15s;
+  }
+  .nav-item:hover{background:rgba(255,255,255,0.06);color:#fff;}
+  .nav-item.active{background:rgba(255,255,255,0.09);color:#fff;border-left-color:var(--gold);}
+  .nav-item .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);opacity:0;}
+  .nav-item.active .dot{opacity:1;}
+  .sidebar-footer{margin-top:auto;padding:0 22px;}
+  .btn-logout{
+    width:100%;padding:10px;border:1px solid rgba(255,255,255,0.25);background:transparent;
+    color:rgba(255,255,255,0.85);border-radius:7px;font-size:13px;
+  }
+  .btn-logout:hover{background:rgba(255,255,255,0.08);}
+
+  .main{margin-left:230px;padding:34px 42px;max-width:1100px;}
+  .page-header{margin-bottom:26px;}
+  .page-header .eyebrow{letter-spacing:.12em;text-transform:uppercase;font-size:11px;color:var(--gold);font-weight:700;}
+  .page-header h1{font-size:30px;color:var(--navy);margin:4px 0 6px;}
+  .page-header p{color:var(--muted);font-size:14.5px;margin:0;max-width:640px;}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:24px;box-shadow:var(--shadow);margin-bottom:22px;}
+  .card h3{margin:0 0 16px;font-size:17px;color:var(--navy);}
+  .grid{display:grid;gap:16px;}
+  .grid-2{grid-template-columns:1fr 1fr;}
+  .grid-3{grid-template-columns:repeat(3,1fr);}
+  .grid-4{grid-template-columns:repeat(4,1fr);}
+  @media(max-width:900px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr;} .sidebar{width:70px;} .main{margin-left:70px;padding:24px 18px;} .sidebar-brand h2,.nav-item span.label{display:none;}}
+
+  .stat{background:var(--cream);border:1px solid var(--line);border-radius:10px;padding:16px 18px;}
+  .stat .label{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;}
+  .stat .value{font-size:24px;font-weight:700;color:var(--navy);margin-top:4px;font-family:'Fraunces',serif;}
+  .stat .value.green{color:var(--green);}
+  .stat .value.red{color:var(--red);}
+
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th{text-align:left;padding:10px 12px;background:var(--cream);color:var(--navy);font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.03em;border-bottom:2px solid var(--line);}
+  td{padding:10px 12px;border-bottom:1px solid var(--line);}
+  tr:last-child td{border-bottom:none;}
+  .row-actions button{background:none;border:none;color:var(--muted);font-size:13px;margin-right:8px;cursor:pointer;}
+  .row-actions button:hover{color:var(--red);}
+  .row-actions button.edit-btn:hover{color:var(--navy);}
+
+  .btn{padding:9px 16px;border-radius:7px;border:none;font-size:13.5px;font-weight:600;}
+  .btn-gold{background:var(--gold);color:#fff;}
+  .btn-gold:hover{background:#9a7a49;}
+  .btn-outline{background:none;border:1px solid var(--line);color:var(--navy);}
+  .btn-outline:hover{background:var(--cream);}
+
+  .inline-form{display:grid;gap:10px;grid-template-columns:2fr 1.3fr 1fr 1fr auto;align-items:end;margin-bottom:16px;}
+  .inline-form label{font-size:11.5px;color:var(--muted);font-weight:600;display:block;margin-bottom:5px;}
+  .inline-form input,.inline-form select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;}
+  @media(max-width:900px){.inline-form{grid-template-columns:1fr;}}
+
+  .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;}
+  .badge-fixa{background:#E5EBF4;color:var(--navy);}
+  .badge-variavel{background:#F4EAD9;color:#8A5A16;}
+
+  .empty-state{text-align:center;padding:36px 20px;color:var(--muted);font-size:13.5px;}
+
+  #toast{
+    position:fixed;bottom:24px;right:24px;background:var(--navy);color:#fff;padding:12px 20px;
+    border-radius:8px;font-size:13.5px;box-shadow:0 8px 24px rgba(0,0,0,0.25);opacity:0;transform:translateY(10px);
+    transition:.25s;pointer-events:none;z-index:999;
+  }
+  #toast.show{opacity:1;transform:translateY(0);}
+
+  .verse{border-left:3px solid var(--gold);padding-left:14px;color:var(--muted);font-style:italic;font-size:13px;margin-top:6px;}
+
+  .bar-wrap{display:flex;align-items:flex-end;gap:10px;height:160px;padding:10px 4px 0;}
+  .bar{flex:1;background:linear-gradient(180deg,var(--gold-light),var(--gold));border-radius:6px 6px 0 0;position:relative;min-height:3px;}
+  .bar .bar-label{position:absolute;bottom:-22px;left:0;right:0;text-align:center;font-size:10.5px;color:var(--muted);}
+  .bar .bar-value{position:absolute;top:-20px;left:0;right:0;text-align:center;font-size:11px;font-weight:700;color:var(--navy);}
+</style>
+</head>
+<body>
+
+<!-- ===================== LOGIN ===================== -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="eyebrow">Educação Financeira com Propósito</div>
+      <h1>GL Financeiro</h1>
+      <p>Mentoria de organização financeira, passo a passo</p>
+    </div>
+
+    <form id="loginForm">
+      <div class="field">
+        <label for="loginEmail">E-mail</label>
+        <input type="email" id="loginEmail" required placeholder="seuemail@exemplo.com" />
+      </div>
+      <div class="field">
+        <label for="loginPassword">Senha</label>
+        <input type="password" id="loginPassword" required placeholder="••••••••" />
+      </div>
+      <button type="submit" class="btn-primary" id="loginSubmitBtn">Entrar</button>
+      <div id="loginError"></div>
+    </form>
+
+    <div class="login-toggle" id="toggleToRegister">
+      Ainda não tem conta? <a onclick="showRegister()">Criar conta</a>
+    </div>
+
+    <form id="registerForm" style="display:none;">
+      <div class="field">
+        <label for="regName">Nome completo</label>
+        <input type="text" id="regName" required placeholder="Seu nome" />
+      </div>
+      <div class="field">
+        <label for="regEmail">E-mail</label>
+        <input type="email" id="regEmail" required placeholder="seuemail@exemplo.com" />
+      </div>
+      <div class="field">
+        <label for="regPassword">Senha</label>
+        <input type="password" id="regPassword" required minlength="6" placeholder="Mínimo 6 caracteres" />
+      </div>
+      <button type="submit" class="btn-primary">Criar conta</button>
+      <div id="registerError"></div>
+    </form>
+    <div class="login-toggle" id="toggleToLogin" style="display:none;">
+      Já tem conta? <a onclick="showLogin()">Entrar</a>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== APP SHELL ===================== -->
+<div id="appShell">
+  <div class="sidebar">
+    <div class="sidebar-brand">
+      <div class="eyebrow">Educação Financeira</div>
+      <h2>GL Financeiro</h2>
+    </div>
+    <div class="nav-item active" data-page="diagnostico">
+      <span class="dot"></span><span class="label">Diagnóstico</span>
+    </div>
+    <div class="nav-item" data-page="orcamento">
+      <span class="dot"></span><span class="label">Orçamento Mensal</span>
+    </div>
+    <div class="nav-item" data-page="dividas">
+      <span class="dot"></span><span class="label">Mapa de Dívidas</span>
+    </div>
+    <div class="nav-item" data-page="evolucao">
+      <span class="dot"></span><span class="label">Evolução</span>
+    </div>
+    <div class="sidebar-footer">
+      <button class="btn-logout" id="logoutBtn">Sair</button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- ---------- DIAGNÓSTICO ---------- -->
+    <section id="page-diagnostico" class="page">
+      <div class="page-header">
+        <div class="eyebrow">Passo 1</div>
+        <h1>Diagnóstico Financeiro</h1>
+        <p>Entenda com clareza sua situação atual: renda, despesas, dívidas e reserva de emergência.</p>
+      </div>
+
+      <div class="card">
+        <h3>Meus números</h3>
+        <div class="grid grid-4">
+          <div class="field">
+            <label>Renda mensal total (R$)</label>
+            <input type="number" id="diagRenda" step="0.01" />
+          </div>
+          <div class="field">
+            <label>Despesas fixas (R$)</label>
+            <input type="number" id="diagFixas" step="0.01" />
+          </div>
+          <div class="field">
+            <label>Despesas variáveis (R$)</label>
+            <input type="number" id="diagVariaveis" step="0.01" />
+          </div>
+          <div class="field">
+            <label>Reserva de emergência atual (R$)</label>
+            <input type="number" id="diagReserva" step="0.01" />
+          </div>
+        </div>
+        <button class="btn btn-gold" id="saveDiagBtn" style="margin-top:6px;">Salvar diagnóstico</button>
+      </div>
+
+      <div class="grid grid-3">
+        <div class="stat"><div class="label">Saldo mensal</div><div class="value" id="statSaldo">R$ 0,00</div></div>
+        <div class="stat"><div class="label">% da renda comprometida</div><div class="value" id="statPct">0%</div></div>
+        <div class="stat"><div class="label">Reserva / despesa mensal</div><div class="value" id="statReserva">0 meses</div></div>
+      </div>
+
+      <div class="card">
+        <h3>Leitura do diagnóstico</h3>
+        <p id="diagLeitura" style="font-size:14px;color:var(--text);">Preencha os campos acima para ver sua leitura personalizada.</p>
+        <div class="verse">"Procura conhecer o estado das tuas ovelhas, e cuida com diligência dos teus rebanhos." — Provérbios 27:23</div>
+      </div>
+    </section>
+
+    <!-- ---------- ORÇAMENTO MENSAL ---------- -->
+    <section id="page-orcamento" class="page" style="display:none;">
+      <div class="page-header">
+        <div class="eyebrow">Passo 2 e 3</div>
+        <h1>Orçamento Mensal</h1>
+        <p>Registre e categorize a renda e as despesas do mês para planejar com intenção.</p>
+      </div>
+
+      <div class="grid grid-2">
+        <div class="stat"><div class="label">Total de renda</div><div class="value green" id="orcTotalRenda">R$ 0,00</div></div>
+        <div class="stat"><div class="label">Total de despesas</div><div class="value red" id="orcTotalDespesa">R$ 0,00</div></div>
+      </div>
+
+      <div class="card">
+        <h3>Nova movimentação</h3>
+        <div class="inline-form">
+          <div>
+            <label>Descrição</label>
+            <input type="text" id="orcDesc" placeholder="Ex: Salário, Aluguel..." />
+          </div>
+          <div>
+            <label>Categoria</label>
+            <select id="orcCategoria">
+              <option>Renda</option>
+              <option>Moradia</option>
+              <option>Alimentação</option>
+              <option>Transporte</option>
+              <option>Saúde</option>
+              <option>Educação</option>
+              <option>Lazer</option>
+              <option>Dívidas</option>
+              <option>Outros</option>
+            </select>
+          </div>
+          <div>
+            <label>Tipo</label>
+            <select id="orcTipo">
+              <option>Fixa</option>
+              <option>Variável</option>
+            </select>
+          </div>
+          <div>
+            <label>Valor (R$)</label>
+            <input type="number" id="orcValor" step="0.01" />
+          </div>
+          <button class="btn btn-gold" id="addOrcBtn">Adicionar</button>
+        </div>
+
+        <table>
+          <thead>
+            <tr><th>Descrição</th><th>Categoria</th><th>Tipo</th><th>Valor</th><th></th></tr>
+          </thead>
+          <tbody id="orcTableBody"></tbody>
+        </table>
+        <div class="empty-state" id="orcEmpty" style="display:none;">Nenhuma movimentação registrada este mês ainda.</div>
+      </div>
+    </section>
+
+    <!-- ---------- MAPA DE DÍVIDAS ---------- -->
+    <section id="page-dividas" class="page" style="display:none;">
+      <div class="page-header">
+        <div class="eyebrow">Passo 4</div>
+        <h1>Mapa de Dívidas</h1>
+        <p>Liste suas dívidas e priorize a quitação das que têm maior taxa de juros.</p>
+      </div>
+
+      <div class="grid grid-2">
+        <div class="stat"><div class="label">Dívida total</div><div class="value red" id="divTotal">R$ 0,00</div></div>
+        <div class="stat"><div class="label">Total de parcelas mensais</div><div class="value" id="divParcelas">R$ 0,00</div></div>
+      </div>
+
+      <div class="card">
+        <h3>Nova dívida</h3>
+        <div class="inline-form" style="grid-template-columns:1.6fr 1fr 1fr 1fr 1fr auto;">
+          <div>
+            <label>Credor</label>
+            <input type="text" id="divCredor" placeholder="Ex: Cartão Nubank" />
+          </div>
+          <div>
+            <label>Valor total (R$)</label>
+            <input type="number" id="divValor" step="0.01" />
+          </div>
+          <div>
+            <label>Juros (% a.m.)</label>
+            <input type="number" id="divJuros" step="0.01" />
+          </div>
+          <div>
+            <label>Parcela mensal (R$)</label>
+            <input type="number" id="divParcela" step="0.01" />
+          </div>
+          <div>
+            <label>Vencimento</label>
+            <input type="date" id="divVencimento" />
+          </div>
+          <button class="btn btn-gold" id="addDivBtn">Adicionar</button>
+        </div>
+
+        <table>
+          <thead>
+            <tr><th>Credor</th><th>Valor</th><th>Juros</th><th>Parcela</th><th>Vencimento</th><th></th></tr>
+          </thead>
+          <tbody id="divTableBody"></tbody>
+        </table>
+        <div class="empty-state" id="divEmpty" style="display:none;">Nenhuma dívida cadastrada — ótimo sinal, ou comece cadastrando para organizar o plano de quitação.</div>
+      </div>
+
+      <div class="card">
+        <div class="verse">"O rico domina sobre os pobres, e o que toma emprestado é servo do que empresta." — Provérbios 22:7</div>
+      </div>
+    </section>
+
+    <!-- ---------- EVOLUÇÃO ---------- -->
+    <section id="page-evolucao" class="page" style="display:none;">
+      <div class="page-header">
+        <div class="eyebrow">Passo 5 e 6</div>
+        <h1>Evolução</h1>
+        <p>Registre um retrato mensal e acompanhe seu progresso ao longo do tempo.</p>
+      </div>
+
+      <div class="card">
+        <h3>Registrar mês</h3>
+        <div class="inline-form" style="grid-template-columns:1fr 1fr 1fr 1fr auto;">
+          <div>
+            <label>Mês de referência</label>
+            <input type="month" id="evoMes" />
+          </div>
+          <div>
+            <label>Saldo do mês (R$)</label>
+            <input type="number" id="evoSaldo" step="0.01" />
+          </div>
+          <div>
+            <label>Dívida total (R$)</label>
+            <input type="number" id="evoDivida" step="0.01" />
+          </div>
+          <div>
+            <label>Reserva acumulada (R$)</label>
+            <input type="number" id="evoReserva" step="0.01" />
+          </div>
+          <button class="btn btn-gold" id="addEvoBtn">Registrar</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Reserva acumulada por mês</h3>
+        <div class="bar-wrap" id="evoChart"></div>
+      </div>
+
+      <div class="card">
+        <h3>Histórico</h3>
+        <table>
+          <thead><tr><th>Mês</th><th>Saldo</th><th>Dívida total</th><th>Reserva</th><th></th></tr></thead>
+          <tbody id="evoTableBody"></tbody>
+        </table>
+        <div class="empty-state" id="evoEmpty" style="display:none;">Nenhum registro ainda. Comece registrando o mês atual.</div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* =====================================================================
+   FIREBASE CONFIG
+   Substitua o objeto abaixo pelas credenciais do seu projeto Firebase
+   (Firebase Console > Configurações do projeto > Seus apps > SDK setup)
+   ===================================================================== */
+const firebaseConfig = {
+  apiKey: "SUA_API_KEY",
+  authDomain: "SEU_PROJETO.firebaseapp.com",
+  databaseURL: "https://SEU_PROJETO-default-rtdb.firebaseio.com",
+  projectId: "SEU_PROJETO",
+  storageBucket: "SEU_PROJETO.appspot.com",
+  messagingSenderId: "SEU_SENDER_ID",
+  appId: "SEU_APP_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.database();
+
+let currentUser = null;
+let unsubscribers = [];
+
+/* ---------------- HELPERS ---------------- */
+function brl(v){
+  v = Number(v) || 0;
+  return v.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+}
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2400);
+}
+function fbErrorPt(err){
+  const map = {
+    'auth/invalid-email':'E-mail inválido.',
+    'auth/user-not-found':'Usuário não encontrado.',
+    'auth/wrong-password':'Senha incorreta.',
+    'auth/email-already-in-use':'Este e-mail já está cadastrado.',
+    'auth/weak-password':'A senha deve ter no mínimo 6 caracteres.',
+    'auth/invalid-credential':'E-mail ou senha inválidos.'
+  };
+  return map[err.code] || 'Ocorreu um erro. Tente novamente.';
+}
+
+/* ---------------- LOGIN / REGISTER TOGGLE ---------------- */
+function showRegister(){
+  document.getElementById('loginForm').style.display='none';
+  document.getElementById('toggleToRegister').style.display='none';
+  document.getElementById('registerForm').style.display='block';
+  document.getElementById('toggleToLogin').style.display='block';
+}
+function showLogin(){
+  document.getElementById('registerForm').style.display='none';
+  document.getElementById('toggleToLogin').style.display='none';
+  document.getElementById('loginForm').style.display='block';
+  document.getElementById('toggleToRegister').style.display='block';
+}
+
+document.getElementById('loginForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = '';
+  auth.signInWithEmailAndPassword(email, password)
+    .catch(err => { errEl.textContent = fbErrorPt(err); });
+});
+
+document.getElementById('registerForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  const name = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const password = document.getElementById('regPassword').value;
+  const errEl = document.getElementById('registerError');
+  errEl.textContent = '';
+  auth.createUserWithEmailAndPassword(email, password)
+    .then(cred => {
+      return cred.user.updateProfile({ displayName: name }).then(()=>{
+        return db.ref('users/'+cred.user.uid+'/perfil').set({ nome:name, email:email, criadoEm: Date.now() });
+      });
+    })
+    .catch(err => { errEl.textContent = fbErrorPt(err); });
+});
+
+document.getElementById('logoutBtn').addEventListener('click', function(){
+  auth.signOut();
+});
+
+/* ---------------- AUTH STATE ---------------- */
+auth.onAuthStateChanged(function(user){
+  unsubscribers.forEach(u => u());
+  unsubscribers = [];
+
+  if(user){
+    currentUser = user;
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('appShell').style.display='block';
+    initDataListeners();
+  } else {
+    currentUser = null;
+    document.getElementById('appShell').style.display='none';
+    document.getElementById('loginScreen').style.display='flex';
+    document.getElementById('loginForm').reset();
+  }
+});
+
+/* ---------------- NAVIGATION ---------------- */
+document.querySelectorAll('.nav-item').forEach(item=>{
+  item.addEventListener('click', function(){
+    document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+    this.classList.add('active');
+    const page = this.dataset.page;
+    document.querySelectorAll('.page').forEach(p=>p.style.display='none');
+    document.getElementById('page-'+page).style.display='block';
+  });
+});
+
+/* ===================================================================
+   DIAGNÓSTICO
+   =================================================================== */
+function initDiagnostico(){
+  const ref = db.ref('users/'+currentUser.uid+'/diagnostico');
+  ref.on('value', snap=>{
+    const d = snap.val() || {};
+    document.getElementById('diagRenda').value = d.renda ?? '';
+    document.getElementById('diagFixas').value = d.fixas ?? '';
+    document.getElementById('diagVariaveis').value = d.variaveis ?? '';
+    document.getElementById('diagReserva').value = d.reserva ?? '';
+    updateDiagnosticoStats(d);
+  });
+  unsubscribers.push(()=>ref.off());
+
+  document.getElementById('saveDiagBtn').addEventListener('click', function(){
+    const data = {
+      renda: parseFloat(document.getElementById('diagRenda').value)||0,
+      fixas: parseFloat(document.getElementById('diagFixas').value)||0,
+      variaveis: parseFloat(document.getElementById('diagVariaveis').value)||0,
+      reserva: parseFloat(document.getElementById('diagReserva').value)||0,
+      atualizadoEm: Date.now()
+    };
+    db.ref('users/'+currentUser.uid+'/diagnostico').set(data)
+      .then(()=>showToast('Diagnóstico salvo com sucesso.'));
+  });
+}
+
+function updateDiagnosticoStats(d){
+  const renda = d.renda||0, fixas = d.fixas||0, variaveis = d.variaveis||0, reserva = d.reserva||0;
+  const despesas = fixas + variaveis;
+  const saldo = renda - despesas;
+  const pct = renda>0 ? (despesas/renda*100) : 0;
+  const mesesReserva = despesas>0 ? (reserva/despesas) : 0;
+
+  const statSaldo = document.getElementById('statSaldo');
+  statSaldo.textContent = brl(saldo);
+  statSaldo.className = 'value ' + (saldo>=0 ? 'green':'red');
+
+  document.getElementById('statPct').textContent = pct.toFixed(0)+'%';
+  document.getElementById('statReserva').textContent = mesesReserva.toFixed(1)+' meses';
+
+  let leitura = '';
+  if(renda===0){
+    leitura = 'Preencha os campos acima para ver sua leitura personalizada.';
+  } else if(saldo<0){
+    leitura = 'Suas despesas estão maiores que sua renda. O primeiro passo é identificar cortes possíveis nas despesas variáveis antes de qualquer outra decisão financeira.';
+  } else if(pct>80){
+    leitura = 'Sua renda está fortemente comprometida (acima de 80%). Ainda há saldo positivo, mas a margem de manobra é pequena — vale revisar despesas fixas.';
+  } else if(mesesReserva<3){
+    leitura = 'Sua situação mensal está sob controle. O próximo passo é fortalecer a reserva de emergência até atingir de 3 a 6 meses de despesas.';
+  } else {
+    leitura = 'Excelente! Você tem saldo positivo e uma reserva de emergência saudável. Hora de pensar em metas de médio prazo com propósito.';
+  }
+  document.getElementById('diagLeitura').textContent = leitura;
+}
+
+/* ===================================================================
+   ORÇAMENTO MENSAL
+   =================================================================== */
+function initOrcamento(){
+  const ref = db.ref('users/'+currentUser.uid+'/orcamento');
+  ref.on('value', snap=>{
+    const items = snap.val() || {};
+    renderOrcamento(items);
+  });
+  unsubscribers.push(()=>ref.off());
+
+  document.getElementById('addOrcBtn').addEventListener('click', function(){
+    const desc = document.getElementById('orcDesc').value.trim();
+    const categoria = document.getElementById('orcCategoria').value;
+    const tipo = document.getElementById('orcTipo').value;
+    const valor = parseFloat(document.getElementById('orcValor').value);
+    if(!desc || !valor){ showToast('Preencha descrição e valor.'); return; }
+    db.ref('users/'+currentUser.uid+'/orcamento').push({
+      desc, categoria, tipo, valor, criadoEm: Date.now()
+    }).then(()=>{
+      document.getElementById('orcDesc').value='';
+      document.getElementById('orcValor').value='';
+      showToast('Movimentação adicionada.');
+    });
+  });
+}
+
+function renderOrcamento(items){
+  const tbody = document.getElementById('orcTableBody');
+  const empty = document.getElementById('orcEmpty');
+  tbody.innerHTML = '';
+  const keys = Object.keys(items);
+  empty.style.display = keys.length ? 'none' : 'block';
+
+  let totalRenda = 0, totalDespesa = 0;
+  keys.sort((a,b)=> (items[a].criadoEm||0) - (items[b].criadoEm||0));
+  keys.forEach(key=>{
+    const it = items[key];
+    if(it.categoria === 'Renda'){ totalRenda += Number(it.valor)||0; }
+    else{ totalDespesa += Number(it.valor)||0; }
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(it.desc)}</td>
+      <td>${escapeHtml(it.categoria)}</td>
+      <td><span class="badge ${it.tipo==='Fixa'?'badge-fixa':'badge-variavel'}">${escapeHtml(it.tipo)}</span></td>
+      <td>${brl(it.valor)}</td>
+      <td class="row-actions"><button data-key="${key}" class="del-orc">Excluir</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('orcTotalRenda').textContent = brl(totalRenda);
+  document.getElementById('orcTotalDespesa').textContent = brl(totalDespesa);
+
+  tbody.querySelectorAll('.del-orc').forEach(btn=>{
+    btn.addEventListener('click', function(){
+      db.ref('users/'+currentUser.uid+'/orcamento/'+this.dataset.key).remove()
+        .then(()=>showToast('Movimentação removida.'));
+    });
+  });
+}
+
+/* ===================================================================
+   MAPA DE DÍVIDAS
+   =================================================================== */
+function initDividas(){
+  const ref = db.ref('users/'+currentUser.uid+'/dividas');
+  ref.on('value', snap=>{
+    const items = snap.val() || {};
+    renderDividas(items);
+  });
+  unsubscribers.push(()=>ref.off());
+
+  document.getElementById('addDivBtn').addEventListener('click', function(){
+    const credor = document.getElementById('divCredor').value.trim();
+    const valor = parseFloat(document.getElementById('divValor').value);
+    const juros = parseFloat(document.getElementById('divJuros').value)||0;
+    const parcela = parseFloat(document.getElementById('divParcela').value)||0;
+    const vencimento = document.getElementById('divVencimento').value;
+    if(!credor || !valor){ showToast('Preencha credor e valor.'); return; }
+    db.ref('users/'+currentUser.uid+'/dividas').push({
+      credor, valor, juros, parcela, vencimento, criadoEm: Date.now()
+    }).then(()=>{
+      document.getElementById('divCredor').value='';
+      document.getElementById('divValor').value='';
+      document.getElementById('divJuros').value='';
+      document.getElementById('divParcela').value='';
+      document.getElementById('divVencimento').value='';
+      showToast('Dívida adicionada.');
+    });
+  });
+}
+
+function renderDividas(items){
+  const tbody = document.getElementById('divTableBody');
+  const empty = document.getElementById('divEmpty');
+  tbody.innerHTML = '';
+  const keys = Object.keys(items);
+  empty.style.display = keys.length ? 'none' : 'block';
+
+  let totalDivida = 0, totalParcelas = 0;
+  keys.sort((a,b)=> (items[b].juros||0) - (items[a].juros||0));
+  keys.forEach(key=>{
+    const it = items[key];
+    totalDivida += Number(it.valor)||0;
+    totalParcelas += Number(it.parcela)||0;
+
+    const venc = it.vencimento ? new Date(it.vencimento+'T00:00:00').toLocaleDateString('pt-BR') : '—';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(it.credor)}</td>
+      <td>${brl(it.valor)}</td>
+      <td>${(it.juros||0).toFixed(2)}% a.m.</td>
+      <td>${brl(it.parcela)}</td>
+      <td>${venc}</td>
+      <td class="row-actions"><button data-key="${key}" class="del-div">Excluir</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('divTotal').textContent = brl(totalDivida);
+  document.getElementById('divParcelas').textContent = brl(totalParcelas);
+
+  tbody.querySelectorAll('.del-div').forEach(btn=>{
+    btn.addEventListener('click', function(){
+      db.ref('users/'+currentUser.uid+'/dividas/'+this.dataset.key).remove()
+        .then(()=>showToast('Dívida removida.'));
+    });
+  });
+}
+
+/* ===================================================================
+   EVOLUÇÃO
+   =================================================================== */
+function initEvolucao(){
+  const ref = db.ref('users/'+currentUser.uid+'/evolucao');
+  ref.on('value', snap=>{
+    const items = snap.val() || {};
+    renderEvolucao(items);
+  });
+  unsubscribers.push(()=>ref.off());
+
+  document.getElementById('addEvoBtn').addEventListener('click', function(){
+    const mes = document.getElementById('evoMes').value;
+    const saldo = parseFloat(document.getElementById('evoSaldo').value)||0;
+    const divida = parseFloat(document.getElementById('evoDivida').value)||0;
+    const reserva = parseFloat(document.getElementById('evoReserva').value)||0;
+    if(!mes){ showToast('Selecione o mês de referência.'); return; }
+    db.ref('users/'+currentUser.uid+'/evolucao/'+mes).set({
+      mes, saldo, divida, reserva, criadoEm: Date.now()
+    }).then(()=>{
+      showToast('Mês registrado.');
+    });
+  });
+}
+
+function renderEvolucao(items){
+  const tbody = document.getElementById('evoTableBody');
+  const empty = document.getElementById('evoEmpty');
+  tbody.innerHTML = '';
+  const keys = Object.keys(items).sort();
+  empty.style.display = keys.length ? 'none' : 'block';
+
+  keys.forEach(key=>{
+    const it = items[key];
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${formatMonth(it.mes)}</td>
+      <td>${brl(it.saldo)}</td>
+      <td>${brl(it.divida)}</td>
+      <td>${brl(it.reserva)}</td>
+      <td class="row-actions"><button data-key="${key}" class="del-evo">Excluir</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  tbody.querySelectorAll('.del-evo').forEach(btn=>{
+    btn.addEventListener('click', function(){
+      db.ref('users/'+currentUser.uid+'/evolucao/'+this.dataset.key).remove()
+        .then(()=>showToast('Registro removido.'));
+    });
+  });
+
+  renderEvoChart(keys.map(k=>items[k]));
+}
+
+function renderEvoChart(records){
+  const wrap = document.getElementById('evoChart');
+  wrap.innerHTML = '';
+  if(!records.length){
+    wrap.innerHTML = '<div class="empty-state" style="width:100%;">Sem dados suficientes para o gráfico.</div>';
+    return;
+  }
+  const max = Math.max(...records.map(r=>Number(r.reserva)||0), 1);
+  records.forEach(r=>{
+    const pct = Math.max((Number(r.reserva)||0) / max * 100, 2);
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+    bar.style.height = pct+'%';
+    bar.innerHTML = `<div class="bar-value">${brl(r.reserva).replace('R$','').trim()}</div><div class="bar-label">${formatMonth(r.mes)}</div>`;
+    wrap.appendChild(bar);
+  });
+}
+
+function formatMonth(mesStr){
+  if(!mesStr) return '—';
+  const [y,m] = mesStr.split('-');
+  const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  return meses[parseInt(m,10)-1]+'/'+y;
+}
+
+function escapeHtml(str){
+  if(str===undefined || str===null) return '';
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+/* ---------------- INIT ALL LISTENERS ---------------- */
+function initDataListeners(){
+  initDiagnostico();
+  initOrcamento();
+  initDividas();
+  initEvolucao();
+}
+</script>
+</body>
+</html>
