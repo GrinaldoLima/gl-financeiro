@@ -201,6 +201,9 @@
     <div class="nav-item active" data-page="diagnostico">
       <span class="dot"></span><span class="label">Diagnóstico</span>
     </div>
+    <div class="nav-item" data-page="resumo">
+      <span class="dot"></span><span class="label">Resumo do Saldo</span>
+    </div>
     <div class="nav-item" data-page="orcamento">
       <span class="dot"></span><span class="label">Orçamento Mensal</span>
     </div>
@@ -222,30 +225,7 @@
       <div class="page-header">
         <div class="eyebrow">Passo 1</div>
         <h1>Diagnóstico Financeiro</h1>
-        <p>Entenda com clareza sua situação atual: renda, despesas, dívidas e reserva de emergência.</p>
-      </div>
-
-      <div class="card">
-        <h3>Meus números</h3>
-        <div class="grid grid-4">
-          <div class="field">
-            <label>Renda mensal total (R$)</label>
-            <input type="number" id="diagRenda" step="0.01" />
-          </div>
-          <div class="field">
-            <label>Despesas fixas (R$)</label>
-            <input type="number" id="diagFixas" step="0.01" />
-          </div>
-          <div class="field">
-            <label>Despesas variáveis (R$)</label>
-            <input type="number" id="diagVariaveis" step="0.01" />
-          </div>
-          <div class="field">
-            <label>Reserva de emergência atual (R$)</label>
-            <input type="number" id="diagReserva" step="0.01" />
-          </div>
-        </div>
-        <button class="btn btn-gold" id="saveDiagBtn" style="margin-top:6px;">Salvar diagnóstico</button>
+        <p>Entenda com clareza sua situação atual: renda, despesas, parcelas de empréstimo/financiamento e reserva de emergência.</p>
       </div>
 
       <div class="grid grid-3">
@@ -255,9 +235,169 @@
       </div>
 
       <div class="card">
+        <h3>Reserva de emergência atual</h3>
+        <div class="inline-form" style="grid-template-columns:1fr auto;">
+          <div>
+            <label>Valor total guardado hoje (R$)</label>
+            <input type="number" id="diagReserva" step="0.01" />
+          </div>
+          <button class="btn btn-gold" id="saveReservaBtn">Salvar</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Rendas</h3>
+        <div class="inline-form">
+          <div>
+            <label>Descrição</label>
+            <input type="text" id="diagRendaDesc" placeholder="Ex: Salário, autônomo..." />
+          </div>
+          <div>
+            <label>Valor (R$)</label>
+            <input type="number" id="diagRendaValor" step="0.01" />
+          </div>
+          <button class="btn btn-gold" id="addDiagRendaBtn" style="grid-column:span 1;">Adicionar</button>
+        </div>
+        <table>
+          <thead><tr><th>Descrição</th><th>Valor</th><th></th></tr></thead>
+          <tbody id="diagRendaTableBody"></tbody>
+        </table>
+        <div class="empty-state" id="diagRendaEmpty" style="display:none;">Nenhuma renda cadastrada ainda.</div>
+      </div>
+
+      <div class="card">
+        <h3>Despesas Fixas</h3>
+        <div class="inline-form">
+          <div>
+            <label>Descrição</label>
+            <input type="text" id="diagFixaDesc" placeholder="Ex: Aluguel, condomínio..." />
+          </div>
+          <div>
+            <label>Valor (R$)</label>
+            <input type="number" id="diagFixaValor" step="0.01" />
+          </div>
+          <button class="btn btn-gold" id="addDiagFixaBtn">Adicionar</button>
+        </div>
+        <table>
+          <thead><tr><th>Descrição</th><th>Valor</th><th></th></tr></thead>
+          <tbody id="diagFixaTableBody"></tbody>
+        </table>
+        <div class="empty-state" id="diagFixaEmpty" style="display:none;">Nenhuma despesa fixa cadastrada ainda.</div>
+      </div>
+
+      <div class="card">
+        <h3>Despesas Variáveis</h3>
+        <div class="inline-form">
+          <div>
+            <label>Descrição</label>
+            <input type="text" id="diagVarDesc" placeholder="Ex: Mercado, lazer..." />
+          </div>
+          <div>
+            <label>Valor (R$)</label>
+            <input type="number" id="diagVarValor" step="0.01" />
+          </div>
+          <button class="btn btn-gold" id="addDiagVarBtn">Adicionar</button>
+        </div>
+        <table>
+          <thead><tr><th>Descrição</th><th>Valor</th><th></th></tr></thead>
+          <tbody id="diagVarTableBody"></tbody>
+        </table>
+        <div class="empty-state" id="diagVarEmpty" style="display:none;">Nenhuma despesa variável cadastrada ainda.</div>
+      </div>
+
+      <div class="card">
+        <h3>Parcelas de Empréstimo</h3>
+        <div class="inline-form">
+          <div>
+            <label>Descrição</label>
+            <input type="text" id="diagEmpDesc" placeholder="Ex: Empréstimo pessoal..." />
+          </div>
+          <div>
+            <label>Valor da parcela (R$)</label>
+            <input type="number" id="diagEmpValor" step="0.01" />
+          </div>
+          <button class="btn btn-gold" id="addDiagEmpBtn">Adicionar</button>
+        </div>
+        <table>
+          <thead><tr><th>Descrição</th><th>Valor</th><th></th></tr></thead>
+          <tbody id="diagEmpTableBody"></tbody>
+        </table>
+        <div class="empty-state" id="diagEmpEmpty" style="display:none;">Nenhuma parcela de empréstimo cadastrada ainda.</div>
+      </div>
+
+      <div class="card">
+        <h3>Parcelas de Financiamento</h3>
+        <div class="inline-form">
+          <div>
+            <label>Descrição</label>
+            <input type="text" id="diagFinDesc" placeholder="Ex: Financiamento do carro..." />
+          </div>
+          <div>
+            <label>Valor da parcela (R$)</label>
+            <input type="number" id="diagFinValor" step="0.01" />
+          </div>
+          <button class="btn btn-gold" id="addDiagFinBtn">Adicionar</button>
+        </div>
+        <table>
+          <thead><tr><th>Descrição</th><th>Valor</th><th></th></tr></thead>
+          <tbody id="diagFinTableBody"></tbody>
+        </table>
+        <div class="empty-state" id="diagFinEmpty" style="display:none;">Nenhuma parcela de financiamento cadastrada ainda.</div>
+      </div>
+
+      <div class="card">
+        <h3>Cartão de Crédito</h3>
+        <div class="inline-form">
+          <div>
+            <label>Descrição</label>
+            <input type="text" id="diagCartaoDesc" placeholder="Ex: Fatura Nubank, Fatura Inter..." />
+          </div>
+          <div>
+            <label>Valor da fatura (R$)</label>
+            <input type="number" id="diagCartaoValor" step="0.01" />
+          </div>
+          <button class="btn btn-gold" id="addDiagCartaoBtn">Adicionar</button>
+        </div>
+        <table>
+          <thead><tr><th>Descrição</th><th>Valor</th><th></th></tr></thead>
+          <tbody id="diagCartaoTableBody"></tbody>
+        </table>
+        <div class="empty-state" id="diagCartaoEmpty" style="display:none;">Nenhuma fatura de cartão cadastrada ainda.</div>
+      </div>
+
+      <div class="card">
         <h3>Leitura do diagnóstico</h3>
         <p id="diagLeitura" style="font-size:14px;color:var(--text);">Preencha os campos acima para ver sua leitura personalizada.</p>
         <div class="verse">"Procura conhecer o estado das tuas ovelhas, e cuida com diligência dos teus rebanhos." — Provérbios 27:23</div>
+      </div>
+    </section>
+
+    <!-- ---------- RESUMO DO SALDO ---------- -->
+    <section id="page-resumo" class="page" style="display:none;">
+      <div class="page-header">
+        <div class="eyebrow">Visão Geral</div>
+        <h1>Resumo do Saldo</h1>
+        <p>Total de entradas, total de saídas e o saldo final, calculados automaticamente a partir do Orçamento Mensal.</p>
+      </div>
+
+      <div class="grid grid-3">
+        <div class="stat">
+          <div class="label">Total de Entradas</div>
+          <div class="value green" id="resumoEntradas">R$ 0,00</div>
+        </div>
+        <div class="stat">
+          <div class="label">Total de Saídas</div>
+          <div class="value red" id="resumoSaidas">R$ 0,00</div>
+        </div>
+        <div class="stat">
+          <div class="label">Saldo</div>
+          <div class="value" id="resumoSaldo">R$ 0,00</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Leitura do saldo</h3>
+        <p id="resumoLeitura" style="font-size:14px;color:var(--text);">Cadastre suas movimentações na aba "Orçamento Mensal" para ver o resumo aqui.</p>
       </div>
     </section>
 
@@ -381,8 +521,36 @@
       </div>
 
       <div class="card">
+        <h3>Dashboard — Resumo Financeiro</h3>
+        <p style="font-size:12px;color:var(--muted);margin:-10px 0 16px;">Atualizado automaticamente a partir das outras abas</p>
+        <table>
+          <thead><tr><th>Indicador</th><th>Valor (R$)</th></tr></thead>
+          <tbody>
+            <tr><td>Renda Total Mensal</td><td id="dashRenda">R$ 0,00</td></tr>
+            <tr><td>Despesas Fixas</td><td id="dashFixas">R$ 0,00</td></tr>
+            <tr><td>Despesas Variáveis</td><td id="dashVariaveis">R$ 0,00</td></tr>
+            <tr><td>Parcelas de Dívidas</td><td id="dashParcelas">R$ 0,00</td></tr>
+            <tr style="font-weight:700;">
+              <td>SALDO DO MÊS (Renda - Despesas - Dívidas)</td>
+              <td id="dashSaldo">R$ 0,00</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="grid grid-2" style="margin-top:16px;">
+          <div class="stat">
+            <div class="label">% da Renda Comprometida (fixas + variáveis + dívidas)</div>
+            <div class="value" id="dashPct">0%</div>
+          </div>
+          <div class="stat">
+            <div class="label">Total de Dívidas em Aberto</div>
+            <div class="value red" id="dashDividaTotal">R$ 0,00</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
         <h3>Registrar mês</h3>
-        <div class="inline-form" style="grid-template-columns:1fr 1fr 1fr 1fr auto;">
+        <div class="inline-form" style="grid-template-columns:1fr 1fr 1fr auto;">
           <div>
             <label>Mês de referência</label>
             <input type="month" id="evoMes" />
@@ -390,10 +558,6 @@
           <div>
             <label>Saldo do mês (R$)</label>
             <input type="number" id="evoSaldo" step="0.01" />
-          </div>
-          <div>
-            <label>Dívida total (R$)</label>
-            <input type="number" id="evoDivida" step="0.01" />
           </div>
           <div>
             <label>Reserva acumulada (R$)</label>
@@ -411,7 +575,7 @@
       <div class="card">
         <h3>Histórico</h3>
         <table>
-          <thead><tr><th>Mês</th><th>Saldo</th><th>Dívida total</th><th>Reserva</th><th></th></tr></thead>
+          <thead><tr><th>Mês</th><th>Saldo</th><th>Reserva</th><th></th></tr></thead>
           <tbody id="evoTableBody"></tbody>
         </table>
         <div class="empty-state" id="evoEmpty" style="display:none;">Nenhum registro ainda. Comece registrando o mês atual.</div>
@@ -430,13 +594,13 @@
    (Firebase Console > Configurações do projeto > Seus apps > SDK setup)
    ===================================================================== */
 const firebaseConfig = {
-  apiKey: "SUA_API_KEY",
-  authDomain: "SEU_PROJETO.firebaseapp.com",
-  databaseURL: "https://SEU_PROJETO-default-rtdb.firebaseio.com",
-  projectId: "SEU_PROJETO",
-  storageBucket: "SEU_PROJETO.appspot.com",
-  messagingSenderId: "SEU_SENDER_ID",
-  appId: "SEU_APP_ID"
+  apiKey: "AIzaSyAA_oFAlwOanLsVbBcXqw-Kyf-3NUKTf64",
+  authDomain: "g-l-financeiro.firebaseapp.com",
+  databaseURL: "https://g-l-financeiro-default-rtdb.firebaseio.com",
+  projectId: "g-l-financeiro",
+  storageBucket: "g-l-financeiro.firebasestorage.app",
+  messagingSenderId: "297416486388",
+  appId: "1:297416486388:web:63ea71916948cd5ef61da1"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -545,34 +709,116 @@ document.querySelectorAll('.nav-item').forEach(item=>{
 /* ===================================================================
    DIAGNÓSTICO
    =================================================================== */
-function initDiagnostico(){
-  const ref = db.ref('users/'+currentUser.uid+'/diagnostico');
-  ref.on('value', snap=>{
-    const d = snap.val() || {};
-    document.getElementById('diagRenda').value = d.renda ?? '';
-    document.getElementById('diagFixas').value = d.fixas ?? '';
-    document.getElementById('diagVariaveis').value = d.variaveis ?? '';
-    document.getElementById('diagReserva').value = d.reserva ?? '';
-    updateDiagnosticoStats(d);
-  });
-  unsubscribers.push(()=>ref.off());
+let diagReservaValor = 0;
+let diagItensData = {};
 
-  document.getElementById('saveDiagBtn').addEventListener('click', function(){
-    const data = {
-      renda: parseFloat(document.getElementById('diagRenda').value)||0,
-      fixas: parseFloat(document.getElementById('diagFixas').value)||0,
-      variaveis: parseFloat(document.getElementById('diagVariaveis').value)||0,
-      reserva: parseFloat(document.getElementById('diagReserva').value)||0,
-      atualizadoEm: Date.now()
-    };
-    db.ref('users/'+currentUser.uid+'/diagnostico').set(data)
-      .then(()=>showToast('Diagnóstico salvo com sucesso.'));
+function initDiagnostico(){
+  const reservaRef = db.ref('users/'+currentUser.uid+'/diagnostico/reserva');
+  const itensRef = db.ref('users/'+currentUser.uid+'/diagnostico/itens');
+
+  reservaRef.on('value', snap=>{
+    diagReservaValor = snap.val() || 0;
+    document.getElementById('diagReserva').value = diagReservaValor || '';
+    updateDiagnosticoStats();
+  });
+
+  itensRef.on('value', snap=>{
+    diagItensData = snap.val() || {};
+    renderDiagnosticoTables();
+    updateDiagnosticoStats();
+  });
+
+  unsubscribers.push(()=>reservaRef.off());
+  unsubscribers.push(()=>itensRef.off());
+
+  document.getElementById('saveReservaBtn').addEventListener('click', function(){
+    const valor = parseFloat(document.getElementById('diagReserva').value)||0;
+    db.ref('users/'+currentUser.uid+'/diagnostico/reserva').set(valor)
+      .then(()=>showToast('Reserva de emergência salva.'));
+  });
+
+  setupDiagAddButton('addDiagRendaBtn', 'diagRendaDesc', 'diagRendaValor', 'Renda');
+  setupDiagAddButton('addDiagFixaBtn', 'diagFixaDesc', 'diagFixaValor', 'Despesa Fixa');
+  setupDiagAddButton('addDiagVarBtn', 'diagVarDesc', 'diagVarValor', 'Despesa Variável');
+  setupDiagAddButton('addDiagEmpBtn', 'diagEmpDesc', 'diagEmpValor', 'Parcela Empréstimo');
+  setupDiagAddButton('addDiagFinBtn', 'diagFinDesc', 'diagFinValor', 'Parcela Financiamento');
+  setupDiagAddButton('addDiagCartaoBtn', 'diagCartaoDesc', 'diagCartaoValor', 'Cartão de Crédito');
+}
+
+function setupDiagAddButton(btnId, descId, valorId, tipo){
+  document.getElementById(btnId).addEventListener('click', function(){
+    const desc = document.getElementById(descId).value.trim();
+    const valor = parseFloat(document.getElementById(valorId).value);
+    if(!desc || !valor){ showToast('Preencha descrição e valor.'); return; }
+    db.ref('users/'+currentUser.uid+'/diagnostico/itens').push({
+      desc, tipo, valor, criadoEm: Date.now()
+    }).then(()=>{
+      document.getElementById(descId).value = '';
+      document.getElementById(valorId).value = '';
+      showToast('Adicionado.');
+    });
   });
 }
 
-function updateDiagnosticoStats(d){
-  const renda = d.renda||0, fixas = d.fixas||0, variaveis = d.variaveis||0, reserva = d.reserva||0;
-  const despesas = fixas + variaveis;
+const DIAG_TIPO_CONFIG = {
+  'Renda': { tbody: 'diagRendaTableBody', empty: 'diagRendaEmpty' },
+  'Despesa Fixa': { tbody: 'diagFixaTableBody', empty: 'diagFixaEmpty' },
+  'Despesa Variável': { tbody: 'diagVarTableBody', empty: 'diagVarEmpty' },
+  'Parcela Empréstimo': { tbody: 'diagEmpTableBody', empty: 'diagEmpEmpty' },
+  'Parcela Financiamento': { tbody: 'diagFinTableBody', empty: 'diagFinEmpty' },
+  'Cartão de Crédito': { tbody: 'diagCartaoTableBody', empty: 'diagCartaoEmpty' },
+};
+
+function renderDiagnosticoTables(){
+  const grouped = {};
+  Object.keys(DIAG_TIPO_CONFIG).forEach(t => grouped[t] = []);
+
+  Object.keys(diagItensData).forEach(key=>{
+    const it = diagItensData[key];
+    if(grouped[it.tipo]){ grouped[it.tipo].push({ key, ...it }); }
+  });
+
+  Object.keys(DIAG_TIPO_CONFIG).forEach(tipo=>{
+    const cfg = DIAG_TIPO_CONFIG[tipo];
+    const tbody = document.getElementById(cfg.tbody);
+    const empty = document.getElementById(cfg.empty);
+    tbody.innerHTML = '';
+    const items = grouped[tipo].sort((a,b)=>(a.criadoEm||0)-(b.criadoEm||0));
+    empty.style.display = items.length ? 'none' : 'block';
+    items.forEach(it=>{
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${escapeHtml(it.desc)}</td>
+        <td>${brl(it.valor)}</td>
+        <td class="row-actions"><button data-key="${it.key}" class="del-diag-item">Excluir</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+    tbody.querySelectorAll('.del-diag-item').forEach(btn=>{
+      btn.addEventListener('click', function(){
+        db.ref('users/'+currentUser.uid+'/diagnostico/itens/'+this.dataset.key).remove()
+          .then(()=>showToast('Item removido.'));
+      });
+    });
+  });
+}
+
+function sumDiagTipo(tipo){
+  return Object.values(diagItensData).reduce((acc, it)=>{
+    return it.tipo === tipo ? acc + (Number(it.valor)||0) : acc;
+  }, 0);
+}
+
+function updateDiagnosticoStats(){
+  const renda = sumDiagTipo('Renda');
+  const fixas = sumDiagTipo('Despesa Fixa');
+  const variaveis = sumDiagTipo('Despesa Variável');
+  const parcelasEmprestimo = sumDiagTipo('Parcela Empréstimo');
+  const parcelasFinanciamento = sumDiagTipo('Parcela Financiamento');
+  const cartaoCredito = sumDiagTipo('Cartão de Crédito');
+  const reserva = diagReservaValor||0;
+
+  const despesas = fixas + variaveis + parcelasEmprestimo + parcelasFinanciamento + cartaoCredito;
   const saldo = renda - despesas;
   const pct = renda>0 ? (despesas/renda*100) : 0;
   const mesesReserva = despesas>0 ? (reserva/despesas) : 0;
@@ -588,15 +834,57 @@ function updateDiagnosticoStats(d){
   if(renda===0){
     leitura = 'Preencha os campos acima para ver sua leitura personalizada.';
   } else if(saldo<0){
-    leitura = 'Suas despesas estão maiores que sua renda. O primeiro passo é identificar cortes possíveis nas despesas variáveis antes de qualquer outra decisão financeira.';
+    leitura = 'Suas despesas e parcelas estão maiores que sua renda. O primeiro passo é identificar cortes possíveis nas despesas variáveis antes de qualquer outra decisão financeira.';
   } else if(pct>80){
-    leitura = 'Sua renda está fortemente comprometida (acima de 80%). Ainda há saldo positivo, mas a margem de manobra é pequena — vale revisar despesas fixas.';
+    leitura = 'Sua renda está fortemente comprometida (acima de 80%). Ainda há saldo positivo, mas a margem de manobra é pequena — vale revisar despesas fixas e parcelas.';
   } else if(mesesReserva<3){
     leitura = 'Sua situação mensal está sob controle. O próximo passo é fortalecer a reserva de emergência até atingir de 3 a 6 meses de despesas.';
   } else {
     leitura = 'Excelente! Você tem saldo positivo e uma reserva de emergência saudável. Hora de pensar em metas de médio prazo com propósito.';
   }
   document.getElementById('diagLeitura').textContent = leitura;
+}
+
+/* ===================================================================
+   RESUMO DO SALDO
+   =================================================================== */
+function initResumo(){
+  const ref = db.ref('users/'+currentUser.uid+'/orcamento');
+  ref.on('value', snap=>{
+    const items = snap.val() || {};
+    renderResumo(items);
+  });
+  unsubscribers.push(()=>ref.off());
+}
+
+function renderResumo(items){
+  const keys = Object.keys(items);
+  let totalEntradas = 0, totalSaidas = 0;
+  keys.forEach(key=>{
+    const it = items[key];
+    const valor = Number(it.valor)||0;
+    if(it.categoria === 'Renda'){ totalEntradas += valor; }
+    else{ totalSaidas += valor; }
+  });
+  const saldo = totalEntradas - totalSaidas;
+
+  document.getElementById('resumoEntradas').textContent = brl(totalEntradas);
+  document.getElementById('resumoSaidas').textContent = brl(totalSaidas);
+
+  const saldoEl = document.getElementById('resumoSaldo');
+  saldoEl.textContent = brl(saldo);
+  saldoEl.className = 'value ' + (saldo >= 0 ? 'green' : 'red');
+
+  const leituraEl = document.getElementById('resumoLeitura');
+  if(keys.length === 0){
+    leituraEl.textContent = 'Cadastre suas movimentações na aba "Orçamento Mensal" para ver o resumo aqui.';
+  } else if(saldo > 0){
+    leituraEl.textContent = `Seu saldo está positivo em ${brl(saldo)}. Considere direcionar parte desse valor para a reserva de emergência ou para quitação de dívidas.`;
+  } else if(saldo < 0){
+    leituraEl.textContent = `Seu saldo está negativo em ${brl(Math.abs(saldo))}. As saídas superaram as entradas este mês — revise a aba "Orçamento Mensal" para identificar onde é possível cortar.`;
+  } else {
+    leituraEl.textContent = 'Suas entradas e saídas estão exatamente equilibradas este mês.';
+  }
 }
 
 /* ===================================================================
@@ -732,6 +1020,66 @@ function renderDividas(items){
 }
 
 /* ===================================================================
+   DASHBOARD — RESUMO DO CASAL (dentro da aba Evolução)
+   =================================================================== */
+let dashDiagData = {};
+let dashDividasData = {};
+
+function initDashboardCasal(){
+  const diagRef = db.ref('users/'+currentUser.uid+'/diagnostico/itens');
+  const divRef = db.ref('users/'+currentUser.uid+'/dividas');
+
+  diagRef.on('value', snap=>{
+    dashDiagData = snap.val() || {};
+    updateDashboardCasal();
+  });
+  divRef.on('value', snap=>{
+    dashDividasData = snap.val() || {};
+    updateDashboardCasal();
+  });
+  unsubscribers.push(()=>diagRef.off());
+  unsubscribers.push(()=>divRef.off());
+}
+
+function sumDashDiagTipo(tipo){
+  return Object.values(dashDiagData||{}).reduce((acc, it)=>{
+    return it.tipo === tipo ? acc + (Number(it.valor)||0) : acc;
+  }, 0);
+}
+
+function updateDashboardCasal(){
+  const renda = sumDashDiagTipo('Renda');
+  const fixas = sumDashDiagTipo('Despesa Fixa');
+  const variaveis = sumDashDiagTipo('Despesa Variável');
+  const parcelasEmprestimo = sumDashDiagTipo('Parcela Empréstimo');
+  const parcelasFinanciamento = sumDashDiagTipo('Parcela Financiamento');
+  const cartaoCredito = sumDashDiagTipo('Cartão de Crédito');
+
+  let parcelasDividas = 0, dividaTotal = 0;
+  Object.values(dashDividasData||{}).forEach(d=>{
+    parcelasDividas += Number(d.parcela)||0;
+    dividaTotal += Number(d.valor)||0;
+  });
+
+  const parcelas = parcelasEmprestimo + parcelasFinanciamento + cartaoCredito + parcelasDividas;
+  const saldo = renda - fixas - variaveis - parcelas;
+  const comprometido = fixas + variaveis + parcelas;
+  const pct = renda > 0 ? (comprometido/renda*100) : 0;
+
+  document.getElementById('dashRenda').textContent = brl(renda);
+  document.getElementById('dashFixas').textContent = brl(fixas);
+  document.getElementById('dashVariaveis').textContent = brl(variaveis);
+  document.getElementById('dashParcelas').textContent = brl(parcelas);
+
+  const saldoCell = document.getElementById('dashSaldo');
+  saldoCell.textContent = brl(saldo);
+  saldoCell.style.color = saldo >= 0 ? 'var(--green)' : 'var(--red)';
+
+  document.getElementById('dashPct').textContent = pct.toFixed(1)+'%';
+  document.getElementById('dashDividaTotal').textContent = brl(dividaTotal);
+}
+
+/* ===================================================================
    EVOLUÇÃO
    =================================================================== */
 function initEvolucao(){
@@ -745,11 +1093,10 @@ function initEvolucao(){
   document.getElementById('addEvoBtn').addEventListener('click', function(){
     const mes = document.getElementById('evoMes').value;
     const saldo = parseFloat(document.getElementById('evoSaldo').value)||0;
-    const divida = parseFloat(document.getElementById('evoDivida').value)||0;
     const reserva = parseFloat(document.getElementById('evoReserva').value)||0;
     if(!mes){ showToast('Selecione o mês de referência.'); return; }
     db.ref('users/'+currentUser.uid+'/evolucao/'+mes).set({
-      mes, saldo, divida, reserva, criadoEm: Date.now()
+      mes, saldo, reserva, criadoEm: Date.now()
     }).then(()=>{
       showToast('Mês registrado.');
     });
@@ -769,7 +1116,6 @@ function renderEvolucao(items){
     tr.innerHTML = `
       <td>${formatMonth(it.mes)}</td>
       <td>${brl(it.saldo)}</td>
-      <td>${brl(it.divida)}</td>
       <td>${brl(it.reserva)}</td>
       <td class="row-actions"><button data-key="${key}" class="del-evo">Excluir</button></td>
     `;
@@ -819,8 +1165,10 @@ function escapeHtml(str){
 /* ---------------- INIT ALL LISTENERS ---------------- */
 function initDataListeners(){
   initDiagnostico();
+  initResumo();
   initOrcamento();
   initDividas();
+  initDashboardCasal();
   initEvolucao();
 }
 </script>
