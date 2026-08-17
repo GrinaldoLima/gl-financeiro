@@ -81,6 +81,40 @@
   }
   .btn-logout:hover{background:rgba(255,255,255,0.08);}
 
+  /* ---------- CLIENT SWITCHER ---------- */
+  .client-switcher{padding:0 22px 18px;border-bottom:1px solid rgba(255,255,255,0.12);margin-bottom:14px;}
+  .client-switcher .label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-light);font-weight:600;margin-bottom:8px;}
+  .client-switcher select{
+    width:100%;padding:9px 10px;border-radius:7px;border:1px solid rgba(255,255,255,0.25);
+    background:rgba(255,255,255,0.08);color:#fff;font-size:13px;margin-bottom:8px;
+  }
+  .client-switcher select option{color:var(--text);}
+  .btn-novo-cliente{
+    width:100%;padding:9px;border-radius:7px;border:1px dashed var(--gold-light);background:transparent;
+    color:var(--gold-light);font-size:13px;font-weight:600;
+  }
+  .btn-novo-cliente:hover{background:rgba(255,255,255,0.08);color:#fff;}
+  @media(max-width:900px){.client-switcher{padding:0 10px 14px;} .client-switcher .label{display:none;} .btn-novo-cliente{font-size:16px;padding:9px 0;}}
+
+  .client-tag{
+    display:inline-flex;align-items:center;gap:6px;background:var(--cream);border:1px solid var(--line);
+    border-radius:20px;padding:5px 14px;font-size:12.5px;color:var(--navy);font-weight:600;margin-top:8px;
+  }
+  .client-tag .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);}
+
+  /* ---------- MODAL ---------- */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(21,42,75,0.55);display:flex;align-items:center;justify-content:center;
+    z-index:1000;padding:20px;
+  }
+  .modal-card{
+    background:var(--card);width:100%;max-width:380px;border-radius:14px;padding:28px 26px;box-shadow:0 20px 60px rgba(0,0,0,0.35);
+  }
+  .modal-card h3{margin:0 0 6px;color:var(--navy);font-size:19px;}
+  .modal-card p{margin:0 0 18px;color:var(--muted);font-size:13px;}
+  .modal-actions{display:flex;gap:10px;margin-top:18px;}
+  .modal-actions .btn{flex:1;}
+
   .main{margin-left:230px;padding:34px 42px;max-width:1100px;}
   .page-header{margin-bottom:26px;}
   .page-header .eyebrow{letter-spacing:.12em;text-transform:uppercase;font-size:11px;color:var(--gold);font-weight:700;}
@@ -198,6 +232,11 @@
       <div class="eyebrow">Educação Financeira</div>
       <h2>GL Financeiro</h2>
     </div>
+    <div class="client-switcher">
+      <div class="label">Cliente em atendimento</div>
+      <select id="clienteSelect"></select>
+      <button class="btn-novo-cliente" id="novoClienteBtn">+ Novo cliente</button>
+    </div>
     <div class="nav-item active" data-page="diagnostico">
       <span class="dot"></span><span class="label">Diagnóstico</span>
     </div>
@@ -226,6 +265,7 @@
         <div class="eyebrow">Passo 1</div>
         <h1>Diagnóstico Financeiro</h1>
         <p>Entenda com clareza sua situação atual: renda, despesas, parcelas de empréstimo/financiamento e reserva de emergência.</p>
+        <div class="client-tag"><span class="dot"></span><span id="diagClienteNome">—</span></div>
       </div>
 
       <div class="grid grid-3">
@@ -585,6 +625,24 @@
   </div>
 </div>
 
+<!-- ===================== MODAL: NOVO CLIENTE ===================== -->
+<div id="novoClienteModal" class="modal-overlay" style="display:none;">
+  <div class="modal-card">
+    <h3>Novo atendimento</h3>
+    <p>Cadastre o nome do cliente para iniciar um novo Diagnóstico Financeiro.</p>
+    <form id="novoClienteForm">
+      <div class="field">
+        <label for="novoClienteNome">Nome do cliente</label>
+        <input type="text" id="novoClienteNome" required placeholder="Ex: Maria e João Silva" />
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" id="cancelarNovoClienteBtn">Cancelar</button>
+        <button type="submit" class="btn btn-gold">Salvar e iniciar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -608,7 +666,10 @@ const auth = firebase.auth();
 const db = firebase.database();
 
 let currentUser = null;
-let unsubscribers = [];
+let unsubscribers = [];      // client-scoped data listeners (diagnostico, orçamento, etc.)
+let clientesUnsub = null;    // listener for the clients list itself
+let currentClienteId = null;
+let clientesData = {};
 
 /* ---------------- HELPERS ---------------- */
 function brl(v){
@@ -681,18 +742,137 @@ document.getElementById('logoutBtn').addEventListener('click', function(){
 auth.onAuthStateChanged(function(user){
   unsubscribers.forEach(u => u());
   unsubscribers = [];
+  if(clientesUnsub){ clientesUnsub(); clientesUnsub = null; }
+  currentClienteId = null;
+  clientesData = {};
 
   if(user){
     currentUser = user;
     document.getElementById('loginScreen').style.display='none';
     document.getElementById('appShell').style.display='block';
-    initDataListeners();
+    loadClientes();
   } else {
     currentUser = null;
     document.getElementById('appShell').style.display='none';
     document.getElementById('loginScreen').style.display='flex';
     document.getElementById('loginForm').reset();
   }
+});
+
+/* ===================================================================
+   CLIENTES (cada consultor atende vários clientes; cada cliente tem
+   seu próprio Diagnóstico, Orçamento, Dívidas e Evolução)
+   =================================================================== */
+function clientesRef(){
+  return db.ref('users/'+currentUser.uid+'/clientes');
+}
+function clienteBasePath(){
+  return 'users/'+currentUser.uid+'/clientes/'+currentClienteId;
+}
+
+function loadClientes(){
+  const ref = clientesRef();
+  clientesUnsub = () => ref.off();
+  ref.on('value', snap => {
+    clientesData = snap.val() || {};
+    renderClienteSelect();
+
+    const ids = Object.keys(clientesData);
+    if(ids.length === 0){
+      // Nenhum cliente ainda: pede pra criar o primeiro
+      currentClienteId = null;
+      stopClientDataListeners();
+      renderEmptyClientState();
+      abrirNovoClienteModal();
+      return;
+    }
+
+    // Se o cliente atualmente selecionado sumiu ou nenhum está selecionado ainda,
+    // tenta recuperar o último usado (localStorage) ou pega o primeiro da lista.
+    if(!currentClienteId || !clientesData[currentClienteId]){
+      const lastUsed = localStorage.getItem('glf_lastCliente_'+currentUser.uid);
+      currentClienteId = (lastUsed && clientesData[lastUsed]) ? lastUsed : ids[0];
+    }
+    selectCliente(currentClienteId, /*skipReRenderSelect=*/true);
+  });
+}
+
+function renderClienteSelect(){
+  const select = document.getElementById('clienteSelect');
+  const ids = Object.keys(clientesData).sort((a,b)=>(clientesData[a].criadoEm||0)-(clientesData[b].criadoEm||0));
+  select.innerHTML = '';
+  if(ids.length === 0){
+    const opt = document.createElement('option');
+    opt.textContent = 'Nenhum cliente cadastrado';
+    opt.value = '';
+    select.appendChild(opt);
+    return;
+  }
+  ids.forEach(id=>{
+    const opt = document.createElement('option');
+    opt.value = id;
+    opt.textContent = clientesData[id].nome;
+    if(id === currentClienteId) opt.selected = true;
+    select.appendChild(opt);
+  });
+}
+
+function renderEmptyClientState(){
+  document.getElementById('diagClienteNome').textContent = 'Nenhum cliente selecionado';
+}
+
+function selectCliente(id, skipReRenderSelect){
+  if(!clientesData[id]) return;
+  currentClienteId = id;
+  localStorage.setItem('glf_lastCliente_'+currentUser.uid, id);
+  if(!skipReRenderSelect) renderClienteSelect();
+  document.getElementById('diagClienteNome').textContent = clientesData[id].nome;
+  restartClientDataListeners();
+}
+
+function stopClientDataListeners(){
+  unsubscribers.forEach(u => u());
+  unsubscribers = [];
+}
+
+function restartClientDataListeners(){
+  stopClientDataListeners();
+  initDataListeners();
+}
+
+document.getElementById('clienteSelect').addEventListener('change', function(){
+  if(this.value) selectCliente(this.value);
+});
+
+function abrirNovoClienteModal(){
+  document.getElementById('novoClienteNome').value = '';
+  document.getElementById('novoClienteModal').style.display = 'flex';
+  setTimeout(()=>document.getElementById('novoClienteNome').focus(), 50);
+}
+function fecharNovoClienteModal(){
+  document.getElementById('novoClienteModal').style.display = 'none';
+}
+
+document.getElementById('novoClienteBtn').addEventListener('click', abrirNovoClienteModal);
+
+document.getElementById('cancelarNovoClienteBtn').addEventListener('click', function(){
+  // Só permite cancelar se já existir ao menos um cliente cadastrado
+  if(Object.keys(clientesData).length > 0){
+    fecharNovoClienteModal();
+  } else {
+    showToast('Cadastre o primeiro cliente para começar.');
+  }
+});
+
+document.getElementById('novoClienteForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  const nome = document.getElementById('novoClienteNome').value.trim();
+  if(!nome){ return; }
+  clientesRef().push({ nome, criadoEm: Date.now() }).then(novoRef=>{
+    currentClienteId = novoRef.key;
+    fecharNovoClienteModal();
+    showToast('Cliente "'+nome+'" cadastrado. Diagnóstico iniciado.');
+  });
 });
 
 /* ---------------- NAVIGATION ---------------- */
@@ -711,10 +891,11 @@ document.querySelectorAll('.nav-item').forEach(item=>{
    =================================================================== */
 let diagReservaValor = 0;
 let diagItensData = {};
+let diagButtonsBound = false;
 
 function initDiagnostico(){
-  const reservaRef = db.ref('users/'+currentUser.uid+'/diagnostico/reserva');
-  const itensRef = db.ref('users/'+currentUser.uid+'/diagnostico/itens');
+  const reservaRef = db.ref(clienteBasePath()+'/diagnostico/reserva');
+  const itensRef = db.ref(clienteBasePath()+'/diagnostico/itens');
 
   reservaRef.on('value', snap=>{
     diagReservaValor = snap.val() || 0;
@@ -731,18 +912,24 @@ function initDiagnostico(){
   unsubscribers.push(()=>reservaRef.off());
   unsubscribers.push(()=>itensRef.off());
 
-  document.getElementById('saveReservaBtn').addEventListener('click', function(){
-    const valor = parseFloat(document.getElementById('diagReserva').value)||0;
-    db.ref('users/'+currentUser.uid+'/diagnostico/reserva').set(valor)
-      .then(()=>showToast('Reserva de emergência salva.'));
-  });
+  // Os botões só precisam ser vinculados uma vez — eles sempre leem o
+  // cliente ativo no momento do clique através de clienteBasePath().
+  if(!diagButtonsBound){
+    diagButtonsBound = true;
 
-  setupDiagAddButton('addDiagRendaBtn', 'diagRendaDesc', 'diagRendaValor', 'Renda');
-  setupDiagAddButton('addDiagFixaBtn', 'diagFixaDesc', 'diagFixaValor', 'Despesa Fixa');
-  setupDiagAddButton('addDiagVarBtn', 'diagVarDesc', 'diagVarValor', 'Despesa Variável');
-  setupDiagAddButton('addDiagEmpBtn', 'diagEmpDesc', 'diagEmpValor', 'Parcela Empréstimo');
-  setupDiagAddButton('addDiagFinBtn', 'diagFinDesc', 'diagFinValor', 'Parcela Financiamento');
-  setupDiagAddButton('addDiagCartaoBtn', 'diagCartaoDesc', 'diagCartaoValor', 'Cartão de Crédito');
+    document.getElementById('saveReservaBtn').addEventListener('click', function(){
+      const valor = parseFloat(document.getElementById('diagReserva').value)||0;
+      db.ref(clienteBasePath()+'/diagnostico/reserva').set(valor)
+        .then(()=>showToast('Reserva de emergência salva.'));
+    });
+
+    setupDiagAddButton('addDiagRendaBtn', 'diagRendaDesc', 'diagRendaValor', 'Renda');
+    setupDiagAddButton('addDiagFixaBtn', 'diagFixaDesc', 'diagFixaValor', 'Despesa Fixa');
+    setupDiagAddButton('addDiagVarBtn', 'diagVarDesc', 'diagVarValor', 'Despesa Variável');
+    setupDiagAddButton('addDiagEmpBtn', 'diagEmpDesc', 'diagEmpValor', 'Parcela Empréstimo');
+    setupDiagAddButton('addDiagFinBtn', 'diagFinDesc', 'diagFinValor', 'Parcela Financiamento');
+    setupDiagAddButton('addDiagCartaoBtn', 'diagCartaoDesc', 'diagCartaoValor', 'Cartão de Crédito');
+  }
 }
 
 function setupDiagAddButton(btnId, descId, valorId, tipo){
@@ -750,7 +937,7 @@ function setupDiagAddButton(btnId, descId, valorId, tipo){
     const desc = document.getElementById(descId).value.trim();
     const valor = parseFloat(document.getElementById(valorId).value);
     if(!desc || !valor){ showToast('Preencha descrição e valor.'); return; }
-    db.ref('users/'+currentUser.uid+'/diagnostico/itens').push({
+    db.ref(clienteBasePath()+'/diagnostico/itens').push({
       desc, tipo, valor, criadoEm: Date.now()
     }).then(()=>{
       document.getElementById(descId).value = '';
@@ -796,7 +983,7 @@ function renderDiagnosticoTables(){
     });
     tbody.querySelectorAll('.del-diag-item').forEach(btn=>{
       btn.addEventListener('click', function(){
-        db.ref('users/'+currentUser.uid+'/diagnostico/itens/'+this.dataset.key).remove()
+        db.ref(clienteBasePath()+'/diagnostico/itens/'+this.dataset.key).remove()
           .then(()=>showToast('Item removido.'));
       });
     });
@@ -849,7 +1036,7 @@ function updateDiagnosticoStats(){
    RESUMO DO SALDO
    =================================================================== */
 function initResumo(){
-  const ref = db.ref('users/'+currentUser.uid+'/orcamento');
+  const ref = db.ref(clienteBasePath()+'/orcamento');
   ref.on('value', snap=>{
     const items = snap.val() || {};
     renderResumo(items);
@@ -890,13 +1077,16 @@ function renderResumo(items){
 /* ===================================================================
    ORÇAMENTO MENSAL
    =================================================================== */
+let orcButtonBound = false;
 function initOrcamento(){
-  const ref = db.ref('users/'+currentUser.uid+'/orcamento');
+  const ref = db.ref(clienteBasePath()+'/orcamento');
   ref.on('value', snap=>{
     const items = snap.val() || {};
     renderOrcamento(items);
   });
   unsubscribers.push(()=>ref.off());
+  if(orcButtonBound) return;
+  orcButtonBound = true;
 
   document.getElementById('addOrcBtn').addEventListener('click', function(){
     const desc = document.getElementById('orcDesc').value.trim();
@@ -904,7 +1094,7 @@ function initOrcamento(){
     const tipo = document.getElementById('orcTipo').value;
     const valor = parseFloat(document.getElementById('orcValor').value);
     if(!desc || !valor){ showToast('Preencha descrição e valor.'); return; }
-    db.ref('users/'+currentUser.uid+'/orcamento').push({
+    db.ref(clienteBasePath()+'/orcamento').push({
       desc, categoria, tipo, valor, criadoEm: Date.now()
     }).then(()=>{
       document.getElementById('orcDesc').value='';
@@ -944,7 +1134,7 @@ function renderOrcamento(items){
 
   tbody.querySelectorAll('.del-orc').forEach(btn=>{
     btn.addEventListener('click', function(){
-      db.ref('users/'+currentUser.uid+'/orcamento/'+this.dataset.key).remove()
+      db.ref(clienteBasePath()+'/orcamento/'+this.dataset.key).remove()
         .then(()=>showToast('Movimentação removida.'));
     });
   });
@@ -953,13 +1143,16 @@ function renderOrcamento(items){
 /* ===================================================================
    MAPA DE DÍVIDAS
    =================================================================== */
+let divButtonBound = false;
 function initDividas(){
-  const ref = db.ref('users/'+currentUser.uid+'/dividas');
+  const ref = db.ref(clienteBasePath()+'/dividas');
   ref.on('value', snap=>{
     const items = snap.val() || {};
     renderDividas(items);
   });
   unsubscribers.push(()=>ref.off());
+  if(divButtonBound) return;
+  divButtonBound = true;
 
   document.getElementById('addDivBtn').addEventListener('click', function(){
     const credor = document.getElementById('divCredor').value.trim();
@@ -968,7 +1161,7 @@ function initDividas(){
     const parcela = parseFloat(document.getElementById('divParcela').value)||0;
     const vencimento = document.getElementById('divVencimento').value;
     if(!credor || !valor){ showToast('Preencha credor e valor.'); return; }
-    db.ref('users/'+currentUser.uid+'/dividas').push({
+    db.ref(clienteBasePath()+'/dividas').push({
       credor, valor, juros, parcela, vencimento, criadoEm: Date.now()
     }).then(()=>{
       document.getElementById('divCredor').value='';
@@ -1013,7 +1206,7 @@ function renderDividas(items){
 
   tbody.querySelectorAll('.del-div').forEach(btn=>{
     btn.addEventListener('click', function(){
-      db.ref('users/'+currentUser.uid+'/dividas/'+this.dataset.key).remove()
+      db.ref(clienteBasePath()+'/dividas/'+this.dataset.key).remove()
         .then(()=>showToast('Dívida removida.'));
     });
   });
@@ -1026,8 +1219,8 @@ let dashDiagData = {};
 let dashDividasData = {};
 
 function initDashboardCasal(){
-  const diagRef = db.ref('users/'+currentUser.uid+'/diagnostico/itens');
-  const divRef = db.ref('users/'+currentUser.uid+'/dividas');
+  const diagRef = db.ref(clienteBasePath()+'/diagnostico/itens');
+  const divRef = db.ref(clienteBasePath()+'/dividas');
 
   diagRef.on('value', snap=>{
     dashDiagData = snap.val() || {};
@@ -1082,20 +1275,23 @@ function updateDashboardCasal(){
 /* ===================================================================
    EVOLUÇÃO
    =================================================================== */
+let evoButtonBound = false;
 function initEvolucao(){
-  const ref = db.ref('users/'+currentUser.uid+'/evolucao');
+  const ref = db.ref(clienteBasePath()+'/evolucao');
   ref.on('value', snap=>{
     const items = snap.val() || {};
     renderEvolucao(items);
   });
   unsubscribers.push(()=>ref.off());
+  if(evoButtonBound) return;
+  evoButtonBound = true;
 
   document.getElementById('addEvoBtn').addEventListener('click', function(){
     const mes = document.getElementById('evoMes').value;
     const saldo = parseFloat(document.getElementById('evoSaldo').value)||0;
     const reserva = parseFloat(document.getElementById('evoReserva').value)||0;
     if(!mes){ showToast('Selecione o mês de referência.'); return; }
-    db.ref('users/'+currentUser.uid+'/evolucao/'+mes).set({
+    db.ref(clienteBasePath()+'/evolucao/'+mes).set({
       mes, saldo, reserva, criadoEm: Date.now()
     }).then(()=>{
       showToast('Mês registrado.');
@@ -1124,7 +1320,7 @@ function renderEvolucao(items){
 
   tbody.querySelectorAll('.del-evo').forEach(btn=>{
     btn.addEventListener('click', function(){
-      db.ref('users/'+currentUser.uid+'/evolucao/'+this.dataset.key).remove()
+      db.ref(clienteBasePath()+'/evolucao/'+this.dataset.key).remove()
         .then(()=>showToast('Registro removido.'));
     });
   });
@@ -1162,8 +1358,9 @@ function escapeHtml(str){
   return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
-/* ---------------- INIT ALL LISTENERS ---------------- */
+/* ---------------- INIT ALL LISTENERS (escopados ao cliente ativo) ---------------- */
 function initDataListeners(){
+  if(!currentClienteId) return;
   initDiagnostico();
   initResumo();
   initOrcamento();
