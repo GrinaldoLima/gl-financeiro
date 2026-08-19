@@ -173,6 +173,16 @@
   .bar{flex:1;background:linear-gradient(180deg,var(--gold-light),var(--gold));border-radius:6px 6px 0 0;position:relative;min-height:3px;}
   .bar .bar-label{position:absolute;bottom:-22px;left:0;right:0;text-align:center;font-size:10.5px;color:var(--muted);}
   .bar .bar-value{position:absolute;top:-20px;left:0;right:0;text-align:center;font-size:11px;font-weight:700;color:var(--navy);}
+
+  .btn-outline{background:transparent;border:1px solid var(--gold);color:var(--navy);}
+  #compTabelaResumoBody td:last-child{text-align:right;font-weight:600;}
+
+  @media print{
+    body *{visibility:hidden;}
+    #printArea, #printArea *{visibility:visible;}
+    #printArea{position:absolute;left:0;top:0;width:100%;padding:0;border:none;box-shadow:none;}
+    .no-print{display:none !important;}
+  }
 </style>
 </head>
 <body>
@@ -239,6 +249,9 @@
     </div>
     <div class="nav-item active" data-page="diagnostico">
       <span class="dot"></span><span class="label">Diagnóstico</span>
+    </div>
+    <div class="nav-item" data-page="compartilhar">
+      <span class="dot"></span><span class="label">Imprimir / Enviar</span>
     </div>
     <div class="nav-item" data-page="resumo">
       <span class="dot"></span><span class="label">Resumo do Saldo</span>
@@ -422,6 +435,51 @@
           <span id="diagParecerStatus" style="font-size:12px;color:var(--muted);"></span>
           <button class="btn btn-gold" id="saveParecerBtn">Salvar parecer</button>
         </div>
+      </div>
+    </section>
+
+    <!-- ---------- IMPRIMIR / ENVIAR ---------- -->
+    <section id="page-compartilhar" class="page" style="display:none;">
+      <div class="page-header no-print">
+        <div class="eyebrow">Passo Extra</div>
+        <h1>Imprimir e Enviar</h1>
+        <p>Gere um resumo do diagnóstico para imprimir, enviar por WhatsApp ou por e-mail.</p>
+        <div class="client-tag"><span class="dot"></span><span id="compClienteNome">—</span></div>
+      </div>
+
+      <div class="card no-print">
+        <h3>Compartilhar diagnóstico</h3>
+        <p style="font-size:13px;color:var(--muted);margin-top:-4px;">O resumo abaixo é montado automaticamente com os dados atuais do cliente selecionado.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
+          <button class="btn btn-gold" id="printDiagBtn">🖨️ Imprimir / Salvar em PDF</button>
+          <button class="btn btn-gold" id="whatsappDiagBtn">🟢 Enviar por WhatsApp</button>
+          <button class="btn btn-gold" id="emailDiagBtn">✉️ Enviar por E-mail</button>
+        </div>
+      </div>
+
+      <div class="card" id="printArea">
+        <h2 style="margin-bottom:4px;">Diagnóstico Financeiro</h2>
+        <p style="margin:0 0 4px;color:var(--muted);">Cliente: <strong id="compNomeCliente">—</strong></p>
+        <p style="margin:0 0 18px;color:var(--muted);">Data: <span id="compData">—</span></p>
+
+        <table id="compTabelaResumo">
+          <thead><tr><th>Categoria</th><th>Valor</th></tr></thead>
+          <tbody id="compTabelaResumoBody"></tbody>
+        </table>
+
+        <div class="grid grid-3" style="margin-top:18px;">
+          <div class="stat"><div class="label">Saldo mensal</div><div class="value" id="compStatSaldo">R$ 0,00</div></div>
+          <div class="stat"><div class="label">% da renda comprometida</div><div class="value" id="compStatPct">0%</div></div>
+          <div class="stat"><div class="label">Reserva / despesa mensal</div><div class="value" id="compStatReserva">0 meses</div></div>
+        </div>
+
+        <h3 style="margin-top:24px;">Leitura do diagnóstico</h3>
+        <p id="compLeitura" style="font-size:14px;color:var(--text);"></p>
+
+        <h3 style="margin-top:24px;">Parecer do Consultor</h3>
+        <p id="compParecer" style="font-size:14px;color:var(--text);white-space:pre-wrap;">Nenhum parecer preenchido ainda.</p>
+
+        <div class="verse">"Procura conhecer o estado das tuas ovelhas, e cuida com diligência dos teus rebanhos." — Provérbios 27:23</div>
       </div>
     </section>
 
@@ -841,6 +899,7 @@ function selectCliente(id, skipReRenderSelect){
   if(!skipReRenderSelect) renderClienteSelect();
   document.getElementById('diagClienteNome').textContent = clientesData[id].nome;
   restartClientDataListeners();
+  renderCompartilhar();
 }
 
 function stopClientDataListeners(){
@@ -896,6 +955,7 @@ document.querySelectorAll('.nav-item').forEach(item=>{
     const page = this.dataset.page;
     document.querySelectorAll('.page').forEach(p=>p.style.display='none');
     document.getElementById('page-'+page).style.display='block';
+    if(page === 'compartilhar') renderCompartilhar();
   });
 });
 
@@ -905,6 +965,8 @@ document.querySelectorAll('.nav-item').forEach(item=>{
 let diagReservaValor = 0;
 let diagItensData = {};
 let diagButtonsBound = false;
+let diagParecerTexto = '';
+let diagParecerAtualizadoEm = null;
 
 function initDiagnostico(){
   const reservaRef = db.ref(clienteBasePath()+'/diagnostico/reserva');
@@ -915,19 +977,24 @@ function initDiagnostico(){
     diagReservaValor = snap.val() || 0;
     document.getElementById('diagReserva').value = diagReservaValor || '';
     updateDiagnosticoStats();
+    renderCompartilhar();
   });
 
   itensRef.on('value', snap=>{
     diagItensData = snap.val() || {};
     renderDiagnosticoTables();
     updateDiagnosticoStats();
+    renderCompartilhar();
   });
 
   parecerRef.on('value', snap=>{
     const data = snap.val() || {};
-    document.getElementById('diagParecer').value = data.texto || '';
+    diagParecerTexto = data.texto || '';
+    diagParecerAtualizadoEm = data.atualizadoEm || null;
+    document.getElementById('diagParecer').value = diagParecerTexto;
     const statusEl = document.getElementById('diagParecerStatus');
-    statusEl.textContent = data.atualizadoEm ? ('Última atualização: '+new Date(data.atualizadoEm).toLocaleString('pt-BR')) : '';
+    statusEl.textContent = diagParecerAtualizadoEm ? ('Última atualização: '+new Date(diagParecerAtualizadoEm).toLocaleString('pt-BR')) : '';
+    renderCompartilhar();
   });
 
   unsubscribers.push(()=>reservaRef.off());
@@ -1026,7 +1093,7 @@ function sumDiagTipo(tipo){
   }, 0);
 }
 
-function updateDiagnosticoStats(){
+function computeDiagnosticoStats(){
   const renda = sumDiagTipo('Renda');
   const fixas = sumDiagTipo('Despesa Fixa');
   const variaveis = sumDiagTipo('Despesa Variável');
@@ -1040,13 +1107,6 @@ function updateDiagnosticoStats(){
   const pct = renda>0 ? (despesas/renda*100) : 0;
   const mesesReserva = despesas>0 ? (reserva/despesas) : 0;
 
-  const statSaldo = document.getElementById('statSaldo');
-  statSaldo.textContent = brl(saldo);
-  statSaldo.className = 'value ' + (saldo>=0 ? 'green':'red');
-
-  document.getElementById('statPct').textContent = pct.toFixed(0)+'%';
-  document.getElementById('statReserva').textContent = mesesReserva.toFixed(1)+' meses';
-
   let leitura = '';
   if(renda===0){
     leitura = 'Preencha os campos acima para ver sua leitura personalizada.';
@@ -1059,8 +1119,100 @@ function updateDiagnosticoStats(){
   } else {
     leitura = 'Excelente! Você tem saldo positivo e uma reserva de emergência saudável. Hora de pensar em metas de médio prazo com propósito.';
   }
-  document.getElementById('diagLeitura').textContent = leitura;
+
+  return { renda, fixas, variaveis, parcelasEmprestimo, parcelasFinanciamento, cartaoCredito, reserva, despesas, saldo, pct, mesesReserva, leitura };
 }
+
+function updateDiagnosticoStats(){
+  const s = computeDiagnosticoStats();
+
+  const statSaldo = document.getElementById('statSaldo');
+  statSaldo.textContent = brl(s.saldo);
+  statSaldo.className = 'value ' + (s.saldo>=0 ? 'green':'red');
+
+  document.getElementById('statPct').textContent = s.pct.toFixed(0)+'%';
+  document.getElementById('statReserva').textContent = s.mesesReserva.toFixed(1)+' meses';
+  document.getElementById('diagLeitura').textContent = s.leitura;
+}
+
+/* ===================================================================
+   IMPRIMIR / ENVIAR
+   =================================================================== */
+function renderCompartilhar(){
+  const compNomeEl = document.getElementById('compNomeCliente');
+  const compClienteTagEl = document.getElementById('compClienteNome');
+  if(!compNomeEl) return; // página ainda não renderizada no DOM
+
+  const nomeCliente = (currentClienteId && clientesData[currentClienteId]) ? clientesData[currentClienteId].nome : 'Nenhum cliente selecionado';
+  compNomeEl.textContent = nomeCliente;
+  compClienteTagEl.textContent = nomeCliente;
+  document.getElementById('compData').textContent = new Date().toLocaleDateString('pt-BR');
+
+  const s = computeDiagnosticoStats();
+
+  const linhas = [
+    ['Rendas', s.renda],
+    ['Despesas Fixas', s.fixas],
+    ['Despesas Variáveis', s.variaveis],
+    ['Parcelas de Empréstimo', s.parcelasEmprestimo],
+    ['Parcelas de Financiamento', s.parcelasFinanciamento],
+    ['Cartão de Crédito', s.cartaoCredito],
+    ['Reserva de Emergência (total guardado)', s.reserva],
+  ];
+  const tbody = document.getElementById('compTabelaResumoBody');
+  tbody.innerHTML = linhas.map(([label, valor])=>
+    `<tr><td>${escapeHtml(label)}</td><td>${brl(valor)}</td></tr>`
+  ).join('');
+
+  const statSaldoEl = document.getElementById('compStatSaldo');
+  statSaldoEl.textContent = brl(s.saldo);
+  statSaldoEl.className = 'value ' + (s.saldo>=0 ? 'green':'red');
+  document.getElementById('compStatPct').textContent = s.pct.toFixed(0)+'%';
+  document.getElementById('compStatReserva').textContent = s.mesesReserva.toFixed(1)+' meses';
+  document.getElementById('compLeitura').textContent = s.leitura;
+  document.getElementById('compParecer').textContent = diagParecerTexto.trim() ? diagParecerTexto : 'Nenhum parecer preenchido ainda.';
+}
+
+function gerarTextoDiagnostico(){
+  const nomeCliente = (currentClienteId && clientesData[currentClienteId]) ? clientesData[currentClienteId].nome : 'Cliente';
+  const s = computeDiagnosticoStats();
+  const data = new Date().toLocaleDateString('pt-BR');
+
+  let txt = '';
+  txt += '*Diagnóstico Financeiro*\n';
+  txt += 'Cliente: '+nomeCliente+'\n';
+  txt += 'Data: '+data+'\n\n';
+  txt += '📊 *Resumo*\n';
+  txt += 'Rendas: '+brl(s.renda)+'\n';
+  txt += 'Despesas Fixas: '+brl(s.fixas)+'\n';
+  txt += 'Despesas Variáveis: '+brl(s.variaveis)+'\n';
+  txt += 'Parcelas de Empréstimo: '+brl(s.parcelasEmprestimo)+'\n';
+  txt += 'Parcelas de Financiamento: '+brl(s.parcelasFinanciamento)+'\n';
+  txt += 'Cartão de Crédito: '+brl(s.cartaoCredito)+'\n';
+  txt += 'Reserva de Emergência: '+brl(s.reserva)+'\n\n';
+  txt += 'Saldo mensal: '+brl(s.saldo)+'\n';
+  txt += '% da renda comprometida: '+s.pct.toFixed(0)+'%\n';
+  txt += 'Reserva / despesa mensal: '+s.mesesReserva.toFixed(1)+' meses\n\n';
+  txt += '📝 *Leitura do diagnóstico*\n'+s.leitura+'\n\n';
+  txt += '🗒️ *Parecer do Consultor*\n'+(diagParecerTexto.trim() ? diagParecerTexto : 'Nenhum parecer preenchido ainda.')+'\n';
+  return txt;
+}
+
+document.getElementById('printDiagBtn').addEventListener('click', function(){
+  window.print();
+});
+
+document.getElementById('whatsappDiagBtn').addEventListener('click', function(){
+  const texto = gerarTextoDiagnostico();
+  window.open('https://wa.me/?text='+encodeURIComponent(texto), '_blank');
+});
+
+document.getElementById('emailDiagBtn').addEventListener('click', function(){
+  const nomeCliente = (currentClienteId && clientesData[currentClienteId]) ? clientesData[currentClienteId].nome : 'Cliente';
+  const texto = gerarTextoDiagnostico();
+  const assunto = 'Diagnóstico Financeiro - '+nomeCliente;
+  window.location.href = 'mailto:?subject='+encodeURIComponent(assunto)+'&body='+encodeURIComponent(texto);
+});
 
 /* ===================================================================
    RESUMO DO SALDO
