@@ -410,6 +410,19 @@
         <p id="diagLeitura" style="font-size:14px;color:var(--text);">Preencha os campos acima para ver sua leitura personalizada.</p>
         <div class="verse">"Procura conhecer o estado das tuas ovelhas, e cuida com diligência dos teus rebanhos." — Provérbios 27:23</div>
       </div>
+
+      <div class="card">
+        <h3>Parecer do Consultor</h3>
+        <p style="font-size:13px;color:var(--muted);margin-top:-4px;">Descreva como o mentorado está e o que será necessário para melhorar.</p>
+        <div>
+          <label>Parecer</label>
+          <textarea id="diagParecer" rows="6" placeholder="Ex: O mentorado apresenta comprometimento de renda elevado, sem reserva de emergência. É necessário priorizar..." style="width:100%;resize:vertical;font-family:inherit;font-size:14px;padding:10px;border-radius:8px;border:1px solid var(--border, #d9d9d9);"></textarea>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+          <span id="diagParecerStatus" style="font-size:12px;color:var(--muted);"></span>
+          <button class="btn btn-gold" id="saveParecerBtn">Salvar parecer</button>
+        </div>
+      </div>
     </section>
 
     <!-- ---------- RESUMO DO SALDO ---------- -->
@@ -896,6 +909,7 @@ let diagButtonsBound = false;
 function initDiagnostico(){
   const reservaRef = db.ref(clienteBasePath()+'/diagnostico/reserva');
   const itensRef = db.ref(clienteBasePath()+'/diagnostico/itens');
+  const parecerRef = db.ref(clienteBasePath()+'/diagnostico/parecer');
 
   reservaRef.on('value', snap=>{
     diagReservaValor = snap.val() || 0;
@@ -909,8 +923,16 @@ function initDiagnostico(){
     updateDiagnosticoStats();
   });
 
+  parecerRef.on('value', snap=>{
+    const data = snap.val() || {};
+    document.getElementById('diagParecer').value = data.texto || '';
+    const statusEl = document.getElementById('diagParecerStatus');
+    statusEl.textContent = data.atualizadoEm ? ('Última atualização: '+new Date(data.atualizadoEm).toLocaleString('pt-BR')) : '';
+  });
+
   unsubscribers.push(()=>reservaRef.off());
   unsubscribers.push(()=>itensRef.off());
+  unsubscribers.push(()=>parecerRef.off());
 
   // Os botões só precisam ser vinculados uma vez — eles sempre leem o
   // cliente ativo no momento do clique através de clienteBasePath().
@@ -921,6 +943,14 @@ function initDiagnostico(){
       const valor = parseFloat(document.getElementById('diagReserva').value)||0;
       db.ref(clienteBasePath()+'/diagnostico/reserva').set(valor)
         .then(()=>showToast('Reserva de emergência salva.'));
+    });
+
+    document.getElementById('saveParecerBtn').addEventListener('click', function(){
+      const texto = document.getElementById('diagParecer').value.trim();
+      db.ref(clienteBasePath()+'/diagnostico/parecer').set({
+        texto: texto,
+        atualizadoEm: Date.now()
+      }).then(()=>showToast('Parecer salvo.'));
     });
 
     setupDiagAddButton('addDiagRendaBtn', 'diagRendaDesc', 'diagRendaValor', 'Renda');
