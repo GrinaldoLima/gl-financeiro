@@ -179,10 +179,18 @@
 
   @media print{
     body *{visibility:hidden;}
-    #printArea, #printArea *{visibility:visible;}
-    #printArea{position:absolute;left:0;top:0;width:100%;padding:0;border:none;box-shadow:none;}
+    #printArea, #printArea *, .print-area, .print-area *{visibility:visible;}
+    #printArea, .print-area{position:absolute;left:0;top:0;width:100%;padding:0;border:none;box-shadow:none;}
     .no-print{display:none !important;}
+    .print-area tr{page-break-inside:avoid;}
+    .print-area .grid-3{grid-template-columns:repeat(3,1fr);}
+    .print-area .stat .value{font-size:18px;}
   }
+  .orc-print-table td:last-child, .orc-print-table th:last-child{text-align:right;}
+  .orc-print-table tr.subtotal td{font-weight:700;background:rgba(0,0,0,0.035);}
+  .orc-print-table tr.cat-row td{font-weight:700;color:var(--navy);padding-top:14px;text-align:left;}
+  .orc-print-assinaturas{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:56px;font-size:13px;text-align:center;}
+  .orc-print-assinaturas div{border-top:1px solid var(--navy);padding-top:6px;}
 </style>
 </head>
 <body>
@@ -258,6 +266,9 @@
     </div>
     <div class="nav-item" data-page="orcamento">
       <span class="dot"></span><span class="label">Orçamento Mensal</span>
+    </div>
+    <div class="nav-item" data-page="imprimirorc">
+      <span class="dot"></span><span class="label">Imprimir / Enviar Orçamento</span>
     </div>
     <div class="nav-item" data-page="dividas">
       <span class="dot"></span><span class="label">Mapa de Dívidas</span>
@@ -480,6 +491,50 @@
         <p id="compParecer" style="font-size:14px;color:var(--text);white-space:pre-wrap;">Nenhum parecer preenchido ainda.</p>
 
         <div class="verse">"Procura conhecer o estado das tuas ovelhas, e cuida com diligência dos teus rebanhos." — Provérbios 27:23</div>
+      </div>
+    </section>
+
+    <!-- ---------- IMPRIMIR ORÇAMENTO ---------- -->
+    <section id="page-imprimirorc" class="page" style="display:none;">
+      <div class="page-header no-print">
+        <div class="eyebrow">Passo 2 e 3</div>
+        <h1>Imprimir e Enviar Orçamento</h1>
+        <p>Gere o orçamento mensal do cliente para imprimir, enviar por WhatsApp ou por e-mail.</p>
+        <div class="client-tag"><span class="dot"></span><span id="orcPrintClienteTag">—</span></div>
+      </div>
+
+      <div class="card no-print">
+        <h3>Compartilhar orçamento</h3>
+        <p style="font-size:13px;color:var(--muted);margin-top:-4px;">O orçamento abaixo é montado automaticamente com as movimentações do cliente selecionado.</p>
+        <div style="max-width:220px;margin-top:10px;">
+          <label>Mês de referência</label>
+          <input type="month" id="orcPrintMes" />
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
+          <button class="btn btn-gold" id="printOrcBtn">🖨️ Imprimir / Salvar em PDF</button>
+          <button class="btn btn-gold" id="whatsappOrcBtn">🟢 Enviar por WhatsApp</button>
+          <button class="btn btn-gold" id="emailOrcBtn">✉️ Enviar por E-mail</button>
+        </div>
+      </div>
+
+      <div class="card print-area" id="orcPrintArea">
+        <h2 style="margin-bottom:4px;">Orçamento Mensal</h2>
+        <p style="margin:0 0 4px;color:var(--muted);">Cliente: <strong id="orcPrintNome">—</strong></p>
+        <p style="margin:0 0 4px;color:var(--muted);">Mês de referência: <strong id="orcPrintMesLabel">—</strong></p>
+        <p style="margin:0 0 18px;color:var(--muted);">Emitido em: <span id="orcPrintData">—</span></p>
+
+        <div class="grid grid-3">
+          <div class="stat"><div class="label">Total de renda</div><div class="value green" id="orcPrintRenda">R$ 0,00</div></div>
+          <div class="stat"><div class="label">Total de despesas</div><div class="value red" id="orcPrintDespesa">R$ 0,00</div></div>
+          <div class="stat"><div class="label">Saldo do mês</div><div class="value" id="orcPrintSaldo">R$ 0,00</div></div>
+        </div>
+
+        <div id="orcPrintConteudo"></div>
+
+        <div class="orc-print-assinaturas">
+          <div>Cliente</div>
+          <div>Grinaldo Lima — Educador Financeiro e Empresário Contábil</div>
+        </div>
       </div>
     </section>
 
@@ -956,6 +1011,7 @@ document.querySelectorAll('.nav-item').forEach(item=>{
     document.querySelectorAll('.page').forEach(p=>p.style.display='none');
     document.getElementById('page-'+page).style.display='block';
     if(page === 'compartilhar') renderCompartilhar();
+    if(page === 'imprimirorc') renderImprimirOrcamento();
   });
 });
 
@@ -1260,6 +1316,7 @@ function renderResumo(items){
    ORÇAMENTO MENSAL
    =================================================================== */
 let orcButtonBound = false;
+let orcItensData = {};
 function initOrcamento(){
   const ref = db.ref(clienteBasePath()+'/orcamento');
   ref.on('value', snap=>{
@@ -1287,6 +1344,8 @@ function initOrcamento(){
 }
 
 function renderOrcamento(items){
+  orcItensData = items;
+  if(document.getElementById('page-imprimirorc').style.display !== 'none') renderImprimirOrcamento();
   const tbody = document.getElementById('orcTableBody');
   const empty = document.getElementById('orcEmpty');
   tbody.innerHTML = '';
@@ -1321,6 +1380,135 @@ function renderOrcamento(items){
     });
   });
 }
+
+/* ===================================================================
+   IMPRIMIR ORÇAMENTO
+   =================================================================== */
+function renderImprimirOrcamento(){
+  const nomeCliente = (currentClienteId && clientesData[currentClienteId]) ? clientesData[currentClienteId].nome : 'Nenhum cliente selecionado';
+  document.getElementById('orcPrintClienteTag').textContent = nomeCliente;
+  document.getElementById('orcPrintNome').textContent = nomeCliente;
+  document.getElementById('orcPrintData').textContent = new Date().toLocaleDateString('pt-BR');
+
+  const mesInput = document.getElementById('orcPrintMes');
+  if(!mesInput.value){
+    const hoje = new Date();
+    mesInput.value = hoje.getFullYear()+'-'+String(hoje.getMonth()+1).padStart(2,'0');
+  }
+  const [ano, mes] = mesInput.value.split('-').map(Number);
+  const mesLabel = new Date(ano, mes-1, 1).toLocaleDateString('pt-BR', {month:'long', year:'numeric'});
+  document.getElementById('orcPrintMesLabel').textContent = mesLabel.charAt(0).toUpperCase()+mesLabel.slice(1);
+
+  const items = orcItensData || {};
+  const lista = Object.keys(items)
+    .sort((a,b)=> (items[a].criadoEm||0) - (items[b].criadoEm||0))
+    .map(k=>items[k]);
+
+  const rendas = lista.filter(it=>it.categoria === 'Renda');
+  const despesas = lista.filter(it=>it.categoria !== 'Renda');
+  const soma = arr => arr.reduce((t,it)=> t + (Number(it.valor)||0), 0);
+  const totalRenda = soma(rendas), totalDespesa = soma(despesas);
+  const saldo = totalRenda - totalDespesa;
+
+  document.getElementById('orcPrintRenda').textContent = brl(totalRenda);
+  document.getElementById('orcPrintDespesa').textContent = brl(totalDespesa);
+  const saldoEl = document.getElementById('orcPrintSaldo');
+  saldoEl.textContent = brl(saldo);
+  saldoEl.className = 'value ' + (saldo >= 0 ? 'green' : 'red');
+
+  const conteudo = document.getElementById('orcPrintConteudo');
+  if(lista.length === 0){
+    conteudo.innerHTML = '<p style="font-size:14px;color:var(--muted);margin-top:18px;">Nenhuma movimentação cadastrada na aba "Orçamento Mensal" para este cliente.</p>';
+    return;
+  }
+
+  const linha = it => `<tr><td>${escapeHtml(it.desc)}</td><td>${escapeHtml(it.tipo)}</td><td>${brl(it.valor)}</td></tr>`;
+  const pct = v => totalRenda > 0 ? (v/totalRenda*100).toFixed(0)+'% da renda' : '—';
+
+  let html = '<h3 style="margin-top:24px;">Rendas</h3>';
+  html += '<table class="orc-print-table"><thead><tr><th>Descrição</th><th>Tipo</th><th>Valor</th></tr></thead><tbody>';
+  html += rendas.length ? rendas.map(linha).join('') : '<tr><td colspan="3">Nenhuma renda cadastrada.</td></tr>';
+  html += `<tr class="subtotal"><td colspan="2">Total de renda</td><td>${brl(totalRenda)}</td></tr></tbody></table>`;
+
+  html += '<h3 style="margin-top:24px;">Despesas por categoria</h3>';
+  html += '<table class="orc-print-table"><thead><tr><th>Descrição</th><th>Tipo</th><th>Valor</th></tr></thead><tbody>';
+  if(despesas.length === 0){
+    html += '<tr><td colspan="3">Nenhuma despesa cadastrada.</td></tr>';
+  } else {
+    const categorias = [];
+    despesas.forEach(it=>{ if(!categorias.includes(it.categoria)) categorias.push(it.categoria); });
+    categorias.forEach(cat=>{
+      const doGrupo = despesas.filter(it=>it.categoria === cat);
+      const sub = soma(doGrupo);
+      html += `<tr class="cat-row"><td colspan="3">${escapeHtml(cat)}</td></tr>`;
+      html += doGrupo.map(linha).join('');
+      html += `<tr class="subtotal"><td colspan="2">Subtotal ${escapeHtml(cat)} (${pct(sub)})</td><td>${brl(sub)}</td></tr>`;
+    });
+  }
+  html += `<tr class="subtotal"><td colspan="2">Total de despesas (${pct(totalDespesa)})</td><td>${brl(totalDespesa)}</td></tr></tbody></table>`;
+
+  const fixas = soma(despesas.filter(it=>it.tipo === 'Fixa'));
+  const variaveis = totalDespesa - fixas;
+  html += '<h3 style="margin-top:24px;">Resumo</h3>';
+  html += '<table class="orc-print-table"><tbody>';
+  html += `<tr><td>Despesas fixas</td><td>${brl(fixas)}</td></tr>`;
+  html += `<tr><td>Despesas variáveis</td><td>${brl(variaveis)}</td></tr>`;
+  html += `<tr class="subtotal"><td>Saldo do mês (renda − despesas)</td><td>${brl(saldo)}</td></tr>`;
+  html += '</tbody></table>';
+
+  conteudo.innerHTML = html;
+}
+
+function gerarTextoOrcamento(){
+  renderImprimirOrcamento();
+  const nomeCliente = (currentClienteId && clientesData[currentClienteId]) ? clientesData[currentClienteId].nome : 'Cliente';
+  const items = orcItensData || {};
+  const lista = Object.keys(items)
+    .sort((a,b)=> (items[a].criadoEm||0) - (items[b].criadoEm||0))
+    .map(k=>items[k]);
+  const rendas = lista.filter(it=>it.categoria === 'Renda');
+  const despesas = lista.filter(it=>it.categoria !== 'Renda');
+  const soma = arr => arr.reduce((t,it)=> t + (Number(it.valor)||0), 0);
+  const totalRenda = soma(rendas), totalDespesa = soma(despesas);
+
+  let txt = '';
+  txt += '*Orçamento Mensal*\n';
+  txt += 'Cliente: '+nomeCliente+'\n';
+  txt += 'Mês de referência: '+document.getElementById('orcPrintMesLabel').textContent+'\n';
+  txt += 'Data: '+new Date().toLocaleDateString('pt-BR')+'\n\n';
+  txt += '💰 *Rendas*\n';
+  txt += rendas.length ? rendas.map(it=>'- '+it.desc+': '+brl(it.valor)).join('\n')+'\n' : 'Nenhuma renda cadastrada.\n';
+  txt += 'Total de renda: '+brl(totalRenda)+'\n\n';
+  txt += '🧾 *Despesas*\n';
+  if(despesas.length === 0){
+    txt += 'Nenhuma despesa cadastrada.\n';
+  } else {
+    const categorias = [];
+    despesas.forEach(it=>{ if(!categorias.includes(it.categoria)) categorias.push(it.categoria); });
+    categorias.forEach(cat=>{
+      const doGrupo = despesas.filter(it=>it.categoria === cat);
+      txt += '_'+cat+'_ ('+brl(soma(doGrupo))+')\n';
+      txt += doGrupo.map(it=>'- '+it.desc+' ('+it.tipo+'): '+brl(it.valor)).join('\n')+'\n';
+    });
+  }
+  txt += 'Total de despesas: '+brl(totalDespesa)+'\n\n';
+  txt += '📊 *Saldo do mês:* '+brl(totalRenda - totalDespesa)+'\n';
+  return txt;
+}
+
+document.getElementById('orcPrintMes').addEventListener('change', renderImprimirOrcamento);
+document.getElementById('whatsappOrcBtn').addEventListener('click', function(){
+  window.open('https://wa.me/?text='+encodeURIComponent(gerarTextoOrcamento()), '_blank');
+});
+document.getElementById('emailOrcBtn').addEventListener('click', function(){
+  const nomeCliente = (currentClienteId && clientesData[currentClienteId]) ? clientesData[currentClienteId].nome : 'Cliente';
+  const assunto = 'Orçamento Mensal - '+nomeCliente;
+  window.location.href = 'mailto:?subject='+encodeURIComponent(assunto)+'&body='+encodeURIComponent(gerarTextoOrcamento());
+});
+document.getElementById('printOrcBtn').addEventListener('click', function(){
+  renderImprimirOrcamento();
+  window.print();
+});
 
 /* ===================================================================
    MAPA DE DÍVIDAS
