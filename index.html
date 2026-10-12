@@ -191,6 +191,31 @@
   .orc-print-table tr.cat-row td{font-weight:700;color:var(--navy);padding-top:14px;text-align:left;}
   .orc-print-assinaturas{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:56px;font-size:13px;text-align:center;}
   .orc-print-assinaturas div{border-top:1px solid var(--navy);padding-top:6px;}
+
+  /* ---------- MÉTODO OFP: passos 3, 4 e 5 ---------- */
+  .sidebar{overflow-y:auto;}
+  .nav-group{padding:14px 22px 4px;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-light);font-weight:700;opacity:.8;}
+  .nav-item.nav-sub{padding:8px 22px 8px 38px;font-size:12.5px;color:rgba(255,255,255,0.6);}
+  .nav-item.nav-sub .dot{width:4px;height:4px;}
+  @media(max-width:900px){.nav-group{display:none;} .nav-item.nav-sub{padding-left:22px;}}
+  .progress{height:14px;background:var(--cream);border:1px solid var(--line);border-radius:20px;overflow:hidden;}
+  .progress > div{height:100%;background:linear-gradient(90deg,var(--gold-light),var(--gold));border-radius:20px;transition:width .3s;}
+  .progress.progress-sm{height:8px;margin-bottom:3px;}
+  .alert{padding:12px 14px;border-radius:8px;font-size:14px;line-height:1.5;}
+  .alert-ok{background:#E8F3EC;color:#1F5C33;border:1px solid #CFE5D7;}
+  .alert-warn{background:#FBF1DE;color:#7A4E10;border:1px solid #F0DDB8;}
+  .alert-danger{background:#F8E5E0;color:#8E2F1C;border:1px solid #EFCBC1;}
+  .alert-info{background:#E5EBF4;color:var(--navy);border:1px solid #CFDAEA;}
+  .parecer-box{width:100%;resize:vertical;font-family:inherit;font-size:14px;padding:10px;border-radius:8px;border:1px solid var(--line);}
+  .checklist label{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px;cursor:pointer;}
+  .checklist label:last-child{border-bottom:none;}
+  .checklist input{margin-top:3px;width:16px;height:16px;accent-color:var(--gold);}
+  #page-reserva .grid-4 .stat .value,#page-credito .grid-4 .stat .value,#page-planejamento .grid-4 .stat .value{font-size:21px;}
+  @media print{
+    .print-area, .print-area *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .print-area .grid-4{grid-template-columns:repeat(4,1fr);}
+    .print-area h3{page-break-after:avoid;}
+  }
 </style>
 </head>
 <body>
@@ -255,20 +280,40 @@
       <select id="clienteSelect"></select>
       <button class="btn-novo-cliente" id="novoClienteBtn">+ Novo cliente</button>
     </div>
+    <div class="nav-group">Método OFP</div>
     <div class="nav-item active" data-page="diagnostico">
-      <span class="dot"></span><span class="label">Diagnóstico</span>
+      <span class="dot"></span><span class="label">1. Diagnóstico</span>
     </div>
-    <div class="nav-item" data-page="compartilhar">
+    <div class="nav-item nav-sub" data-page="compartilhar">
       <span class="dot"></span><span class="label">Imprimir / Enviar</span>
     </div>
+    <div class="nav-item" data-page="orcamento">
+      <span class="dot"></span><span class="label">2. Orçamento Mensal</span>
+    </div>
+    <div class="nav-item nav-sub" data-page="imprimirorc">
+      <span class="dot"></span><span class="label">Imprimir / Enviar</span>
+    </div>
+    <div class="nav-item" data-page="reserva">
+      <span class="dot"></span><span class="label">3. Reserva de Emergência</span>
+    </div>
+    <div class="nav-item nav-sub" data-page="imprimirres">
+      <span class="dot"></span><span class="label">Imprimir / Enviar</span>
+    </div>
+    <div class="nav-item" data-page="credito">
+      <span class="dot"></span><span class="label">4. Crédito Fácil e Perigoso</span>
+    </div>
+    <div class="nav-item nav-sub" data-page="imprimircr">
+      <span class="dot"></span><span class="label">Imprimir / Enviar</span>
+    </div>
+    <div class="nav-item" data-page="planejamento">
+      <span class="dot"></span><span class="label">5. Planejamento Financeiro</span>
+    </div>
+    <div class="nav-item nav-sub" data-page="imprimirpl">
+      <span class="dot"></span><span class="label">Imprimir / Enviar</span>
+    </div>
+    <div class="nav-group">Ferramentas</div>
     <div class="nav-item" data-page="resumo">
       <span class="dot"></span><span class="label">Resumo do Saldo</span>
-    </div>
-    <div class="nav-item" data-page="orcamento">
-      <span class="dot"></span><span class="label">Orçamento Mensal</span>
-    </div>
-    <div class="nav-item" data-page="imprimirorc">
-      <span class="dot"></span><span class="label">Imprimir / Enviar Orçamento</span>
     </div>
     <div class="nav-item" data-page="dividas">
       <span class="dot"></span><span class="label">Mapa de Dívidas</span>
@@ -452,8 +497,8 @@
     <!-- ---------- IMPRIMIR / ENVIAR ---------- -->
     <section id="page-compartilhar" class="page" style="display:none;">
       <div class="page-header no-print">
-        <div class="eyebrow">Passo Extra</div>
-        <h1>Imprimir e Enviar</h1>
+        <div class="eyebrow">Passo 1</div>
+        <h1>Imprimir e Enviar Diagnóstico</h1>
         <p>Gere um resumo do diagnóstico para imprimir, enviar por WhatsApp ou por e-mail.</p>
         <div class="client-tag"><span class="dot"></span><span id="compClienteNome">—</span></div>
       </div>
@@ -497,7 +542,7 @@
     <!-- ---------- IMPRIMIR ORÇAMENTO ---------- -->
     <section id="page-imprimirorc" class="page" style="display:none;">
       <div class="page-header no-print">
-        <div class="eyebrow">Passo 2 e 3</div>
+        <div class="eyebrow">Passo 2</div>
         <h1>Imprimir e Enviar Orçamento</h1>
         <p>Gere o orçamento mensal do cliente para imprimir, enviar por WhatsApp ou por e-mail.</p>
         <div class="client-tag"><span class="dot"></span><span id="orcPrintClienteTag">—</span></div>
@@ -570,7 +615,7 @@
     <!-- ---------- ORÇAMENTO MENSAL ---------- -->
     <section id="page-orcamento" class="page" style="display:none;">
       <div class="page-header">
-        <div class="eyebrow">Passo 2 e 3</div>
+        <div class="eyebrow">Passo 2</div>
         <h1>Orçamento Mensal</h1>
         <p>Registre e categorize a renda e as despesas do mês para planejar com intenção.</p>
       </div>
@@ -625,10 +670,369 @@
       </div>
     </section>
 
+
+    <!-- ---------- PASSO 3: RESERVA DE EMERGÊNCIA ---------- -->
+    <section id="page-reserva" class="page" style="display:none;">
+      <div class="page-header">
+        <div class="eyebrow">Passo 3</div>
+        <h1>Reserva de Emergência</h1>
+        <p>Defina a meta da reserva, acompanhe quanto já foi guardado e veja em quanto tempo ela estará completa.</p>
+        <div class="client-tag"><span class="dot"></span><span id="reservaClienteTag">—</span></div>
+      </div>
+
+      <div class="grid grid-4">
+        <div class="stat"><div class="label">Meta da reserva</div><div class="value" id="resMeta">R$ 0,00</div></div>
+        <div class="stat"><div class="label">Já guardado</div><div class="value green" id="resGuardado">R$ 0,00</div></div>
+        <div class="stat"><div class="label">Falta guardar</div><div class="value red" id="resFalta">R$ 0,00</div></div>
+        <div class="stat"><div class="label">Previsão</div><div class="value" id="resPrevisao" style="font-size:18px;">—</div></div>
+      </div>
+
+      <div class="card" style="margin-top:22px;">
+        <h3>Progresso da reserva</h3>
+        <div class="progress"><div id="resBarra" style="width:0%;"></div></div>
+        <p id="resProgressoTxt" style="font-size:13px;color:var(--muted);margin:8px 0 0;">0% da meta</p>
+      </div>
+
+      <div class="card">
+        <h3>Definir a meta</h3>
+        <p style="font-size:13px;color:var(--muted);margin-top:-4px;">Gastos essenciais são aqueles que não podem parar: moradia, alimentação, transporte, saúde, contas básicas e parcelas obrigatórias.</p>
+        <div class="inline-form" style="grid-template-columns:1.2fr 1fr 1fr 1fr;">
+          <div>
+            <label>Gastos essenciais por mês (R$)</label>
+            <input type="number" id="resEssenciais" step="0.01" />
+          </div>
+          <div>
+            <label>Meses de cobertura</label>
+            <select id="resMeses">
+              <option value="3">3 meses</option>
+              <option value="6" selected>6 meses</option>
+              <option value="9">9 meses</option>
+              <option value="12">12 meses</option>
+            </select>
+          </div>
+          <div>
+            <label>Valor já guardado (R$)</label>
+            <input type="number" id="resGuardadoInput" step="0.01" />
+          </div>
+          <div>
+            <label>Quanto guardar por mês (R$)</label>
+            <input type="number" id="resAporte" step="0.01" />
+          </div>
+        </div>
+        <div class="inline-form" style="grid-template-columns:2fr auto auto;">
+          <div>
+            <label>Onde a reserva fica guardada</label>
+            <input type="text" id="resLocal" placeholder="Ex: Tesouro Selic, CDB com liquidez diária..." />
+          </div>
+          <button class="btn btn-outline" id="resUsarDiagBtn">Usar despesas do diagnóstico</button>
+          <button class="btn btn-gold" id="resSalvarBtn">Salvar</button>
+        </div>
+        <p style="font-size:12px;color:var(--muted);margin:0;">O "valor já guardado" é o mesmo campo de reserva do Diagnóstico: ao salvar aqui, ele é atualizado lá também.</p>
+      </div>
+
+      <div class="card">
+        <h3>Plano de construção mês a mês</h3>
+        <table class="orc-print-table">
+          <thead><tr><th>Mês</th><th>Guardar no mês</th><th>Total acumulado</th><th>% da meta</th></tr></thead>
+          <tbody id="resPlanoBody"></tbody>
+        </table>
+        <div class="empty-state" id="resPlanoEmpty">Defina os gastos essenciais e quanto guardar por mês para ver o plano.</div>
+      </div>
+
+      <div class="card">
+        <h3>Leitura da reserva</h3>
+        <div id="resLeitura" class="alert alert-warn">Preencha a meta acima para ver a leitura personalizada.</div>
+        <div class="verse" style="margin-top:14px;">"Tesouro desejável e azeite há na casa do sábio, mas o homem insensato os devora." — Provérbios 21:20</div>
+      </div>
+
+      <div class="card">
+        <h3>Parecer do Consultor</h3>
+        <p style="font-size:13px;color:var(--muted);margin-top:-4px;">Orientações sobre a construção da reserva deste cliente.</p>
+        <textarea id="resParecer" rows="5" class="parecer-box" placeholder="Ex: Começar guardando o equivalente a 1 mês de gastos essenciais em aplicação de liquidez diária..."></textarea>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+          <span id="resParecerStatus" style="font-size:12px;color:var(--muted);"></span>
+          <button class="btn btn-gold" id="resParecerBtn">Salvar parecer</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- IMPRIMIR / ENVIAR RESERVA ---------- -->
+    <section id="page-imprimirres" class="page" style="display:none;">
+      <div class="page-header no-print">
+        <div class="eyebrow">Passo 3</div>
+        <h1>Imprimir e Enviar Reserva</h1>
+        <p>Gere o plano da reserva de emergência para imprimir, enviar por WhatsApp ou por e-mail.</p>
+        <div class="client-tag"><span class="dot"></span><span id="resPrintClienteTag">—</span></div>
+      </div>
+
+      <div class="card no-print">
+        <h3>Compartilhar reserva de emergência</h3>
+        <p style="font-size:13px;color:var(--muted);margin-top:-4px;">O relatório abaixo é montado automaticamente com os dados atuais do cliente selecionado.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
+          <button class="btn btn-gold" id="printResBtn">🖨️ Imprimir / Salvar em PDF</button>
+          <button class="btn btn-gold" id="whatsappResBtn">🟢 Enviar por WhatsApp</button>
+          <button class="btn btn-gold" id="emailResBtn">✉️ Enviar por E-mail</button>
+        </div>
+      </div>
+
+      <div class="card print-area">
+        <h2 style="margin-bottom:4px;">Reserva de Emergência</h2>
+        <p style="margin:0 0 4px;color:var(--muted);">Cliente: <strong id="resPrintNome">—</strong></p>
+        <p style="margin:0 0 18px;color:var(--muted);">Emitido em: <span id="resPrintData">—</span></p>
+        <div id="resPrintConteudo"></div>
+        <h3 style="margin-top:24px;">Parecer do Consultor</h3>
+        <p id="resPrintParecer" style="font-size:14px;white-space:pre-wrap;">Nenhum parecer preenchido ainda.</p>
+        <div class="verse">"Tesouro desejável e azeite há na casa do sábio, mas o homem insensato os devora." — Provérbios 21:20</div>
+        <div class="orc-print-assinaturas">
+          <div>Cliente</div>
+          <div>Grinaldo Lima — Educador Financeiro e Empresário Contábil</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- PASSO 4: CRÉDITO FÁCIL E PERIGOSO ---------- -->
+    <section id="page-credito" class="page" style="display:none;">
+      <div class="page-header">
+        <div class="eyebrow">Passo 4</div>
+        <h1>Crédito Fácil e Perigoso</h1>
+        <p>Veja o peso das parcelas na renda, descubra o custo real do crédito antes de contratar e defina a ordem de quitação das dívidas.</p>
+        <div class="client-tag"><span class="dot"></span><span id="creditoClienteTag">—</span></div>
+      </div>
+
+      <div class="grid grid-4">
+        <div class="stat"><div class="label">Dívida total</div><div class="value red" id="crDividaTotal">R$ 0,00</div></div>
+        <div class="stat"><div class="label">Parcelas por mês</div><div class="value" id="crParcelas">R$ 0,00</div></div>
+        <div class="stat"><div class="label">% da renda em parcelas</div><div class="value" id="crPctRenda">0%</div></div>
+        <div class="stat"><div class="label">Situação</div><div class="value" id="crSituacao" style="font-size:18px;">—</div></div>
+      </div>
+      <p id="crFonte" style="font-size:12px;color:var(--muted);margin:8px 0 22px;"></p>
+
+      <div class="card">
+        <h3>Simulador: quanto o crédito custa de verdade</h3>
+        <p style="font-size:13px;color:var(--muted);margin-top:-4px;">Simule um empréstimo, um parcelamento ou o rotativo do cartão / cheque especial e veja quanto será pago no final.</p>
+        <div class="inline-form" style="grid-template-columns:1.4fr 1.6fr 1fr 1fr 0.8fr auto;">
+          <div>
+            <label>Tipo</label>
+            <select id="crTipo">
+              <option>Empréstimo / Parcelamento</option>
+              <option>Rotativo / Cheque especial</option>
+            </select>
+          </div>
+          <div>
+            <label>Descrição</label>
+            <input type="text" id="crDesc" placeholder="Ex: Empréstimo pessoal banco X" />
+          </div>
+          <div>
+            <label>Valor (R$)</label>
+            <input type="number" id="crValor" step="0.01" />
+          </div>
+          <div>
+            <label>Juros (% a.m.)</label>
+            <input type="number" id="crJuros" step="0.01" />
+          </div>
+          <div>
+            <label>Meses</label>
+            <input type="number" id="crPrazo" step="1" min="1" />
+          </div>
+          <button class="btn btn-gold" id="crAddBtn">Simular e salvar</button>
+        </div>
+        <div id="crPreview" class="alert alert-info" style="display:none;margin:0 0 16px;"></div>
+
+        <table>
+          <thead><tr><th>Descrição</th><th>Tipo</th><th>Valor</th><th>Juros</th><th>Meses</th><th>Parcela</th><th>Total pago</th><th>Só de juros</th><th></th></tr></thead>
+          <tbody id="crSimBody"></tbody>
+        </table>
+        <div class="empty-state" id="crSimEmpty">Nenhuma simulação salva ainda.</div>
+      </div>
+
+      <div class="card">
+        <h3>Ordem de quitação das dívidas</h3>
+        <div class="inline-form" style="grid-template-columns:minmax(0,360px);">
+          <div>
+            <label>Estratégia</label>
+            <select id="crMetodo">
+              <option value="avalanche">Avalanche: maior juros primeiro</option>
+              <option value="bola">Bola de neve: menor saldo primeiro</option>
+            </select>
+          </div>
+        </div>
+        <p id="crMetodoTxt" style="font-size:13px;color:var(--muted);margin:-4px 0 14px;"></p>
+        <table>
+          <thead><tr><th>Prioridade</th><th>Credor</th><th>Saldo</th><th>Juros</th><th>Parcela</th></tr></thead>
+          <tbody id="crOrdemBody"></tbody>
+        </table>
+        <div class="empty-state" id="crOrdemEmpty">Cadastre as dívidas na aba "Mapa de Dívidas" para montar a ordem de quitação.</div>
+      </div>
+
+      <div class="card">
+        <h3>Antes de contratar qualquer crédito</h3>
+        <p style="font-size:13px;color:var(--muted);margin-top:-4px;">Marque o que o cliente já consegue responder com "sim".</p>
+        <div class="checklist" id="crChecklist"></div>
+        <p id="crChecklistTxt" style="font-size:13px;font-weight:600;color:var(--navy);margin:12px 0 0;"></p>
+      </div>
+
+      <div class="card">
+        <h3>Leitura do crédito</h3>
+        <div id="crLeitura" class="alert alert-warn">Preencha o Diagnóstico e o Mapa de Dívidas para ver a leitura personalizada.</div>
+        <div class="verse" style="margin-top:14px;">"A ninguém devais coisa alguma, a não ser o amor com que vos ameis uns aos outros." — Romanos 13:8</div>
+      </div>
+
+      <div class="card">
+        <h3>Parecer do Consultor</h3>
+        <p style="font-size:13px;color:var(--muted);margin-top:-4px;">Orientações sobre uso de crédito e quitação das dívidas deste cliente.</p>
+        <textarea id="crParecer" rows="5" class="parecer-box" placeholder="Ex: Suspender o uso do cartão até quitar o rotativo. Renegociar o empréstimo com o banco X..."></textarea>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+          <span id="crParecerStatus" style="font-size:12px;color:var(--muted);"></span>
+          <button class="btn btn-gold" id="crParecerBtn">Salvar parecer</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- IMPRIMIR / ENVIAR CRÉDITO ---------- -->
+    <section id="page-imprimircr" class="page" style="display:none;">
+      <div class="page-header no-print">
+        <div class="eyebrow">Passo 4</div>
+        <h1>Imprimir e Enviar Crédito</h1>
+        <p>Gere o relatório de crédito e quitação de dívidas para imprimir, enviar por WhatsApp ou por e-mail.</p>
+        <div class="client-tag"><span class="dot"></span><span id="crPrintClienteTag">—</span></div>
+      </div>
+
+      <div class="card no-print">
+        <h3>Compartilhar crédito e dívidas</h3>
+        <p style="font-size:13px;color:var(--muted);margin-top:-4px;">O relatório abaixo é montado automaticamente com os dados atuais do cliente selecionado.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
+          <button class="btn btn-gold" id="printCrBtn">🖨️ Imprimir / Salvar em PDF</button>
+          <button class="btn btn-gold" id="whatsappCrBtn">🟢 Enviar por WhatsApp</button>
+          <button class="btn btn-gold" id="emailCrBtn">✉️ Enviar por E-mail</button>
+        </div>
+      </div>
+
+      <div class="card print-area">
+        <h2 style="margin-bottom:4px;">Crédito Fácil e Perigoso</h2>
+        <p style="margin:0 0 4px;color:var(--muted);">Cliente: <strong id="crPrintNome">—</strong></p>
+        <p style="margin:0 0 18px;color:var(--muted);">Emitido em: <span id="crPrintData">—</span></p>
+        <div id="crPrintConteudo"></div>
+        <h3 style="margin-top:24px;">Parecer do Consultor</h3>
+        <p id="crPrintParecer" style="font-size:14px;white-space:pre-wrap;">Nenhum parecer preenchido ainda.</p>
+        <div class="verse">"A ninguém devais coisa alguma, a não ser o amor com que vos ameis uns aos outros." — Romanos 13:8</div>
+        <div class="orc-print-assinaturas">
+          <div>Cliente</div>
+          <div>Grinaldo Lima — Educador Financeiro e Empresário Contábil</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- PASSO 5: PLANEJAMENTO FINANCEIRO ---------- -->
+    <section id="page-planejamento" class="page" style="display:none;">
+      <div class="page-header">
+        <div class="eyebrow">Passo 5</div>
+        <h1>Planejamento Financeiro</h1>
+        <p>Transforme sonhos em metas com valor, prazo e quanto guardar por mês, e confira se o plano cabe no orçamento.</p>
+        <div class="client-tag"><span class="dot"></span><span id="planClienteTag">—</span></div>
+      </div>
+
+      <div class="grid grid-4">
+        <div class="stat"><div class="label">Metas cadastradas</div><div class="value" id="plQtd">0</div></div>
+        <div class="stat"><div class="label">Valor total das metas</div><div class="value" id="plTotal">R$ 0,00</div></div>
+        <div class="stat"><div class="label">Guardar por mês (metas)</div><div class="value" id="plAporte">R$ 0,00</div></div>
+        <div class="stat"><div class="label">Saldo mensal disponível</div><div class="value" id="plSaldo">R$ 0,00</div></div>
+      </div>
+
+      <div class="card" style="margin-top:22px;">
+        <h3>Nova meta</h3>
+        <div class="inline-form" style="grid-template-columns:1.6fr 1.3fr 1fr 1fr 1fr auto;">
+          <div>
+            <label>Meta</label>
+            <input type="text" id="plDesc" placeholder="Ex: Trocar de carro, viagem, casa própria..." />
+          </div>
+          <div>
+            <label>Prazo</label>
+            <select id="plPrazo">
+              <option value="Curto prazo">Curto prazo (até 1 ano)</option>
+              <option value="Médio prazo">Médio prazo (1 a 5 anos)</option>
+              <option value="Longo prazo">Longo prazo (acima de 5 anos)</option>
+            </select>
+          </div>
+          <div>
+            <label>Valor da meta (R$)</label>
+            <input type="number" id="plValor" step="0.01" />
+          </div>
+          <div>
+            <label>Já guardado (R$)</label>
+            <input type="number" id="plGuardado" step="0.01" />
+          </div>
+          <div>
+            <label>Data alvo</label>
+            <input type="month" id="plData" />
+          </div>
+          <button class="btn btn-gold" id="plAddBtn">Adicionar</button>
+        </div>
+
+        <table>
+          <thead><tr><th>Meta</th><th>Prazo</th><th>Valor</th><th>Guardado</th><th>Progresso</th><th>Data alvo</th><th>Guardar/mês</th><th></th></tr></thead>
+          <tbody id="plBody"></tbody>
+        </table>
+        <div class="empty-state" id="plEmpty">Nenhuma meta cadastrada ainda.</div>
+      </div>
+
+      <div class="card">
+        <h3>O plano cabe no orçamento?</h3>
+        <table class="orc-print-table">
+          <tbody id="plCapacidadeBody"></tbody>
+        </table>
+        <div id="plLeitura" class="alert alert-warn" style="margin-top:14px;">Cadastre as metas para ver a leitura personalizada.</div>
+        <div class="verse" style="margin-top:14px;">"Pois qual de vós, querendo edificar uma torre, não se assenta primeiro a fazer as contas dos gastos, para ver se tem com que a acabar?" — Lucas 14:28</div>
+      </div>
+
+      <div class="card">
+        <h3>Parecer do Consultor</h3>
+        <p style="font-size:13px;color:var(--muted);margin-top:-4px;">Orientações sobre as metas e o planejamento deste cliente.</p>
+        <textarea id="plParecer" rows="5" class="parecer-box" placeholder="Ex: Priorizar a meta de curto prazo após completar a reserva. Rever as metas a cada 6 meses..."></textarea>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;">
+          <span id="plParecerStatus" style="font-size:12px;color:var(--muted);"></span>
+          <button class="btn btn-gold" id="plParecerBtn">Salvar parecer</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- IMPRIMIR / ENVIAR PLANEJAMENTO ---------- -->
+    <section id="page-imprimirpl" class="page" style="display:none;">
+      <div class="page-header no-print">
+        <div class="eyebrow">Passo 5</div>
+        <h1>Imprimir e Enviar Planejamento</h1>
+        <p>Gere o planejamento financeiro do cliente para imprimir, enviar por WhatsApp ou por e-mail.</p>
+        <div class="client-tag"><span class="dot"></span><span id="plPrintClienteTag">—</span></div>
+      </div>
+
+      <div class="card no-print">
+        <h3>Compartilhar planejamento</h3>
+        <p style="font-size:13px;color:var(--muted);margin-top:-4px;">O relatório abaixo é montado automaticamente com os dados atuais do cliente selecionado.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
+          <button class="btn btn-gold" id="printPlBtn">🖨️ Imprimir / Salvar em PDF</button>
+          <button class="btn btn-gold" id="whatsappPlBtn">🟢 Enviar por WhatsApp</button>
+          <button class="btn btn-gold" id="emailPlBtn">✉️ Enviar por E-mail</button>
+        </div>
+      </div>
+
+      <div class="card print-area">
+        <h2 style="margin-bottom:4px;">Planejamento Financeiro</h2>
+        <p style="margin:0 0 4px;color:var(--muted);">Cliente: <strong id="plPrintNome">—</strong></p>
+        <p style="margin:0 0 18px;color:var(--muted);">Emitido em: <span id="plPrintData">—</span></p>
+        <div id="plPrintConteudo"></div>
+        <h3 style="margin-top:24px;">Parecer do Consultor</h3>
+        <p id="plPrintParecer" style="font-size:14px;white-space:pre-wrap;">Nenhum parecer preenchido ainda.</p>
+        <div class="verse">"Pois qual de vós, querendo edificar uma torre, não se assenta primeiro a fazer as contas dos gastos, para ver se tem com que a acabar?" — Lucas 14:28</div>
+        <div class="orc-print-assinaturas">
+          <div>Cliente</div>
+          <div>Grinaldo Lima — Educador Financeiro e Empresário Contábil</div>
+        </div>
+      </div>
+    </section>
+
     <!-- ---------- MAPA DE DÍVIDAS ---------- -->
     <section id="page-dividas" class="page" style="display:none;">
       <div class="page-header">
-        <div class="eyebrow">Passo 4</div>
+        <div class="eyebrow">Ferramenta · usada no Passo 4</div>
         <h1>Mapa de Dívidas</h1>
         <p>Liste suas dívidas e priorize a quitação das que têm maior taxa de juros.</p>
       </div>
@@ -681,7 +1085,7 @@
     <!-- ---------- EVOLUÇÃO ---------- -->
     <section id="page-evolucao" class="page" style="display:none;">
       <div class="page-header">
-        <div class="eyebrow">Passo 5 e 6</div>
+        <div class="eyebrow">Acompanhamento</div>
         <h1>Evolução</h1>
         <p>Registre um retrato mensal e acompanhe seu progresso ao longo do tempo.</p>
       </div>
@@ -955,6 +1359,7 @@ function selectCliente(id, skipReRenderSelect){
   document.getElementById('diagClienteNome').textContent = clientesData[id].nome;
   restartClientDataListeners();
   renderCompartilhar();
+  renderOFP();
 }
 
 function stopClientDataListeners(){
@@ -1012,6 +1417,8 @@ document.querySelectorAll('.nav-item').forEach(item=>{
     document.getElementById('page-'+page).style.display='block';
     if(page === 'compartilhar') renderCompartilhar();
     if(page === 'imprimirorc') renderImprimirOrcamento();
+    if(typeof renderOFP === 'function') renderOFP();
+    window.scrollTo(0,0);
   });
 });
 
@@ -1032,8 +1439,11 @@ function initDiagnostico(){
   reservaRef.on('value', snap=>{
     diagReservaValor = snap.val() || 0;
     document.getElementById('diagReserva').value = diagReservaValor || '';
+    const resGuardadoEl = document.getElementById('resGuardadoInput');
+    if(resGuardadoEl) resGuardadoEl.value = diagReservaValor || '';
     updateDiagnosticoStats();
     renderCompartilhar();
+    renderOFP();
   });
 
   itensRef.on('value', snap=>{
@@ -1041,6 +1451,7 @@ function initDiagnostico(){
     renderDiagnosticoTables();
     updateDiagnosticoStats();
     renderCompartilhar();
+    renderOFP();
   });
 
   parecerRef.on('value', snap=>{
@@ -1640,6 +2051,7 @@ function updateDashboardCasal(){
 
   document.getElementById('dashPct').textContent = pct.toFixed(1)+'%';
   document.getElementById('dashDividaTotal').textContent = brl(dividaTotal);
+  renderOFP();
 }
 
 /* ===================================================================
@@ -1728,6 +2140,666 @@ function escapeHtml(str){
   return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
+/* ===================================================================
+   MÉTODO OFP — PASSO 3 (RESERVA), PASSO 4 (CRÉDITO), PASSO 5 (PLANEJAMENTO)
+   Dados salvos em: users/{uid}/clientes/{cliente}/ofp
+   =================================================================== */
+let ofpData = {};
+let ofpButtonsBound = false;
+
+const CHECKLIST_CREDITO = [
+  'É uma necessidade real, e não apenas um desejo?',
+  'A nova parcela cabe no orçamento sem passar de 30% da renda em parcelas?',
+  'Comparei o CET (Custo Efetivo Total) em pelo menos 3 instituições?',
+  'Sei exatamente quanto vou pagar no total, somando todas as parcelas?',
+  'Não estou pegando crédito para pagar outra dívida sem um plano de quitação?',
+  'Conversei com meu cônjuge/família e tenho paz sobre essa decisão?'
+];
+const PRAZO_ORDEM = ['Curto prazo','Médio prazo','Longo prazo'];
+
+/* ---------- helpers ---------- */
+function nomeClienteAtual(fallback){
+  return (currentClienteId && clientesData[currentClienteId]) ? clientesData[currentClienteId].nome : (fallback || 'Nenhum cliente selecionado');
+}
+function ymHoje(){ const d = new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+function ymSomar(ym, n){ const [y,m] = ym.split('-').map(Number); const d = new Date(y, m-1+n, 1); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+function mesesAte(ym){ if(!ym) return 0; const [y,m] = ym.split('-').map(Number); const h = new Date(); return (y-h.getFullYear())*12 + (m-(h.getMonth()+1)); }
+function setText(id, txt){ const el = document.getElementById(id); if(el) el.textContent = txt; }
+function setValueClass(id, txt, cls){ const el = document.getElementById(id); if(!el) return; el.textContent = txt; el.className = 'value'+(cls ? ' '+cls : ''); }
+function setInput(id, v){ const el = document.getElementById(id); if(el) el.value = (v === undefined || v === null || v === 0) ? '' : v; }
+function setAlert(id, texto, nivel){ const el = document.getElementById(id); if(!el) return; el.textContent = texto; el.className = 'alert alert-'+nivel; }
+function fmtPct(v){ return (isFinite(v) ? v : 0).toFixed(0)+'%'; }
+function fmtJuros(v){ return (Number(v)||0).toFixed(2).replace('.', ',')+'% a.m.'; }
+function ofpParecer(passo){ return (ofpData[passo] && ofpData[passo].parecer && ofpData[passo].parecer.texto) || ''; }
+
+/* ---------- listener ---------- */
+function initOFP(){
+  ofpData = {};
+  const ref = db.ref(clienteBasePath()+'/ofp');
+  ref.on('value', snap=>{
+    ofpData = snap.val() || {};
+    preencherFormulariosOFP();
+    renderOFP();
+  });
+  unsubscribers.push(()=>ref.off());
+  if(ofpButtonsBound) return;
+  ofpButtonsBound = true;
+  bindOFPButtons();
+}
+
+function preencherFormulariosOFP(){
+  const cfg = (ofpData.reserva && ofpData.reserva.config) || {};
+  setInput('resEssenciais', cfg.essenciais);
+  document.getElementById('resMeses').value = String(cfg.meses || 6);
+  setInput('resAporte', cfg.aporte);
+  document.getElementById('resLocal').value = cfg.local || '';
+  setInput('resGuardadoInput', diagReservaValor);
+
+  [['reserva','resParecer','resParecerStatus'],['credito','crParecer','crParecerStatus'],['planejamento','plParecer','plParecerStatus']]
+    .forEach(([passo, txtId, statusId])=>{
+      const p = (ofpData[passo] && ofpData[passo].parecer) || {};
+      document.getElementById(txtId).value = p.texto || '';
+      setText(statusId, p.atualizadoEm ? 'Última atualização: '+new Date(p.atualizadoEm).toLocaleString('pt-BR') : '');
+    });
+
+  document.getElementById('crMetodo').value = (ofpData.credito && ofpData.credito.metodo) || 'avalanche';
+  const check = (ofpData.credito && ofpData.credito.checklist) || {};
+  document.querySelectorAll('#crChecklist input[type=checkbox]').forEach(cb=>{ cb.checked = !!check['q'+cb.dataset.q]; });
+}
+
+function renderOFP(){
+  if(!document.getElementById('page-reserva')) return;
+  renderReserva();
+  renderCredito();
+  renderPlanejamento();
+  const hoje = new Date().toLocaleDateString('pt-BR');
+  ['resPrintData','crPrintData','plPrintData'].forEach(id=>setText(id, hoje));
+}
+
+/* ===================================================================
+   PASSO 3 — RESERVA DE EMERGÊNCIA
+   =================================================================== */
+function computeReserva(){
+  const cfg = (ofpData.reserva && ofpData.reserva.config) || {};
+  const essenciais = Number(cfg.essenciais)||0;
+  const meses = Number(cfg.meses)||6;
+  const aporte = Number(cfg.aporte)||0;
+  const local = cfg.local || '';
+  const guardado = Number(diagReservaValor)||0;
+  const meta = essenciais*meses;
+  const falta = Math.max(meta-guardado, 0);
+  const pct = meta>0 ? Math.min(guardado/meta*100, 100) : 0;
+  const mesesParaMeta = (falta>0 && aporte>0) ? Math.ceil(falta/aporte) : 0;
+  const cobertura = essenciais>0 ? guardado/essenciais : 0;
+  const diag = computeDiagnosticoStats();
+
+  let previsao = '—';
+  if(meta>0 && falta===0) previsao = 'Meta atingida';
+  else if(meta>0 && aporte<=0) previsao = 'Defina o valor mensal';
+  else if(meta>0) previsao = mesesParaMeta+(mesesParaMeta===1?' mês':' meses')+' ('+formatMonth(ymSomar(ymHoje(), mesesParaMeta))+')';
+
+  // Plano mês a mês (até 36 meses)
+  const plano = [];
+  if(meta>0 && falta>0 && aporte>0){
+    let acumulado = guardado;
+    for(let k=1; k<=Math.min(mesesParaMeta, 36); k++){
+      const novo = Math.min(acumulado+aporte, meta);
+      plano.push({ mes: ymSomar(ymHoje(), k), aporte: novo-acumulado, acumulado: novo, pct: novo/meta*100 });
+      acumulado = novo;
+    }
+  }
+
+  let leitura, nivel;
+  if(meta===0){
+    leitura = 'Informe os gastos essenciais por mês e quantos meses de cobertura deseja para calcular a meta da reserva.';
+    nivel = 'warn';
+  } else if(falta===0){
+    leitura = 'Parabéns! A reserva de emergência está completa e cobre '+cobertura.toFixed(1).replace('.',',')+' meses de gastos essenciais. Mantenha o dinheiro em aplicação segura e de resgate imediato, use apenas em emergências reais e siga para o Planejamento Financeiro.';
+    nivel = 'ok';
+  } else if(aporte<=0){
+    leitura = 'Faltam '+brl(falta)+' para completar a reserva. Defina um valor para guardar todo mês, mesmo que pequeno: a constância vale mais que o valor.';
+    nivel = 'warn';
+  } else if(diag.renda>0 && aporte>diag.saldo){
+    leitura = 'O valor planejado ('+brl(aporte)+' por mês) é maior que o saldo mensal do diagnóstico ('+brl(diag.saldo)+'). Ajuste o orçamento ou reduza o valor mensal para que o plano seja possível de cumprir.';
+    nivel = 'danger';
+  } else {
+    leitura = 'Guardando '+brl(aporte)+' por mês, a reserva estará completa em '+mesesParaMeta+(mesesParaMeta===1?' mês':' meses')+'. Hoje ela cobre '+cobertura.toFixed(1).replace('.',',')+' meses de gastos essenciais.';
+    if(cobertura<1) leitura += ' Primeira conquista: chegar a 1 mês de gastos essenciais ('+brl(essenciais)+').';
+    nivel = 'ok';
+  }
+
+  return { essenciais, meses, aporte, local, guardado, meta, falta, pct, mesesParaMeta, cobertura, previsao, plano, leitura, nivel };
+}
+
+function reservaPlanoRows(r){
+  return r.plano.map(p=>`<tr><td>${formatMonth(p.mes)}</td><td>${brl(p.aporte)}</td><td>${brl(p.acumulado)}</td><td>${fmtPct(p.pct)}</td></tr>`).join('')
+    + (r.mesesParaMeta>36 ? `<tr><td colspan="4" style="color:var(--muted);">… o plano continua até ${formatMonth(ymSomar(ymHoje(), r.mesesParaMeta))}.</td></tr>` : '');
+}
+
+function renderReserva(){
+  const r = computeReserva();
+  const nome = nomeClienteAtual();
+  setText('reservaClienteTag', nome);
+  setText('resPrintClienteTag', nome);
+  setText('resPrintNome', nome);
+
+  setText('resMeta', brl(r.meta));
+  setText('resGuardado', brl(r.guardado));
+  setValueClass('resFalta', brl(r.falta), r.falta>0 ? 'red' : 'green');
+  setText('resPrevisao', r.previsao);
+  document.getElementById('resBarra').style.width = r.pct+'%';
+  setText('resProgressoTxt', r.meta>0 ? fmtPct(r.pct)+' da meta ('+brl(r.guardado)+' de '+brl(r.meta)+')' : 'Defina a meta para acompanhar o progresso.');
+
+  document.getElementById('resPlanoBody').innerHTML = reservaPlanoRows(r);
+  document.getElementById('resPlanoEmpty').style.display = r.plano.length ? 'none' : 'block';
+  if(!r.plano.length && r.meta>0 && r.falta===0) setText('resPlanoEmpty', 'Meta atingida — não há mais aportes a planejar.');
+  else if(!r.plano.length) setText('resPlanoEmpty', 'Defina os gastos essenciais e quanto guardar por mês para ver o plano.');
+  setAlert('resLeitura', r.leitura, r.nivel);
+
+  // Relatório para impressão
+  let html = `<div class="grid grid-4">
+      <div class="stat"><div class="label">Meta</div><div class="value">${brl(r.meta)}</div></div>
+      <div class="stat"><div class="label">Já guardado</div><div class="value green">${brl(r.guardado)}</div></div>
+      <div class="stat"><div class="label">Falta guardar</div><div class="value ${r.falta>0?'red':'green'}">${brl(r.falta)}</div></div>
+      <div class="stat"><div class="label">Previsão</div><div class="value" style="font-size:15px;">${escapeHtml(r.previsao)}</div></div>
+    </div>
+    <div class="progress" style="margin-top:16px;"><div style="width:${r.pct}%;"></div></div>
+    <p style="font-size:12.5px;color:var(--muted);margin:6px 0 0;">${fmtPct(r.pct)} da meta atingida</p>
+    <h3 style="margin-top:24px;">Como a meta foi calculada</h3>
+    <table class="orc-print-table"><tbody>
+      <tr><td>Gastos essenciais por mês</td><td>${brl(r.essenciais)}</td></tr>
+      <tr><td>Meses de cobertura</td><td>${r.meses} meses</td></tr>
+      <tr class="subtotal"><td>Meta da reserva</td><td>${brl(r.meta)}</td></tr>
+      <tr><td>Valor a guardar por mês</td><td>${brl(r.aporte)}</td></tr>
+      <tr><td>Onde a reserva fica guardada</td><td>${escapeHtml(r.local || '—')}</td></tr>
+    </tbody></table>`;
+  if(r.plano.length){
+    html += `<h3 style="margin-top:24px;">Plano mês a mês</h3>
+      <table class="orc-print-table"><thead><tr><th>Mês</th><th>Guardar no mês</th><th>Total acumulado</th><th>% da meta</th></tr></thead>
+      <tbody>${reservaPlanoRows(r)}</tbody></table>`;
+  }
+  html += `<h3 style="margin-top:24px;">Leitura da reserva</h3><p style="font-size:14px;">${escapeHtml(r.leitura)}</p>`;
+  document.getElementById('resPrintConteudo').innerHTML = html;
+  const parecer = ofpParecer('reserva');
+  setText('resPrintParecer', parecer.trim() ? parecer : 'Nenhum parecer preenchido ainda.');
+}
+
+function gerarTextoReserva(){
+  const r = computeReserva();
+  const parecer = ofpParecer('reserva');
+  let txt = '*Reserva de Emergência*\n';
+  txt += 'Cliente: '+nomeClienteAtual('Cliente')+'\n';
+  txt += 'Data: '+new Date().toLocaleDateString('pt-BR')+'\n\n';
+  txt += '🎯 *Meta*\n';
+  txt += 'Gastos essenciais por mês: '+brl(r.essenciais)+'\n';
+  txt += 'Meses de cobertura: '+r.meses+'\n';
+  txt += 'Meta da reserva: '+brl(r.meta)+'\n\n';
+  txt += '💰 *Situação atual*\n';
+  txt += 'Já guardado: '+brl(r.guardado)+' ('+fmtPct(r.pct)+' da meta)\n';
+  txt += 'Falta guardar: '+brl(r.falta)+'\n';
+  txt += 'Guardar por mês: '+brl(r.aporte)+'\n';
+  txt += 'Previsão: '+r.previsao+'\n';
+  if(r.local) txt += 'Onde guardar: '+r.local+'\n';
+  txt += '\n📝 *Leitura*\n'+r.leitura+'\n\n';
+  txt += '🗒️ *Parecer do Consultor*\n'+(parecer.trim() ? parecer : 'Nenhum parecer preenchido ainda.')+'\n';
+  return txt;
+}
+
+/* ===================================================================
+   PASSO 4 — CRÉDITO FÁCIL E PERIGOSO
+   =================================================================== */
+function calcSimulacao(s){
+  const v = Number(s.valor)||0, i = (Number(s.juros)||0)/100, n = Math.max(parseInt(s.prazo,10)||0, 0);
+  if(s.tipo === 'Rotativo / Cheque especial'){
+    const total = v*Math.pow(1+i, n);
+    return { parcela:null, total, jurosPagos: total-v };
+  }
+  if(n<=0) return { parcela:0, total:v, jurosPagos:0 };
+  const parcela = i>0 ? v*i/(1-Math.pow(1+i, -n)) : v/n;
+  const total = parcela*n;
+  return { parcela, total, jurosPagos: total-v };
+}
+function taxaAnual(jurosMes){ return (Math.pow(1+(Number(jurosMes)||0)/100, 12)-1)*100; }
+
+function computeCredito(){
+  const diag = computeDiagnosticoStats();
+  const dividas = Object.values(dashDividasData || {});
+  const dividaTotal = dividas.reduce((t,d)=>t+(Number(d.valor)||0), 0);
+  const parcelasMapa = dividas.reduce((t,d)=>t+(Number(d.parcela)||0), 0);
+  const parcelasDiag = diag.parcelasEmprestimo + diag.parcelasFinanciamento + diag.cartaoCredito;
+  const parcelas = parcelasMapa>0 ? parcelasMapa : parcelasDiag;
+  const fonte = parcelasMapa>0 ? 'Mapa de Dívidas' : 'Diagnóstico';
+  const pct = diag.renda>0 ? parcelas/diag.renda*100 : 0;
+
+  let situacao = '—', sitCls = '';
+  if(diag.renda>0 && parcelas>0){
+    if(pct>30){ situacao = 'Perigo'; sitCls = 'red'; }
+    else if(pct>20){ situacao = 'Atenção'; sitCls = ''; }
+    else { situacao = 'Saudável'; sitCls = 'green'; }
+  } else if(diag.renda>0){ situacao = 'Sem parcelas'; sitCls = 'green'; }
+
+  const metodo = (ofpData.credito && ofpData.credito.metodo) || 'avalanche';
+  const ordem = dividas.slice().sort(metodo === 'avalanche'
+    ? (a,b)=> ((Number(b.juros)||0)-(Number(a.juros)||0)) || ((Number(a.valor)||0)-(Number(b.valor)||0))
+    : (a,b)=> (Number(a.valor)||0)-(Number(b.valor)||0));
+
+  const simsObj = (ofpData.credito && ofpData.credito.simulacoes) || {};
+  const sims = Object.keys(simsObj)
+    .sort((a,b)=>(simsObj[a].criadoEm||0)-(simsObj[b].criadoEm||0))
+    .map(k=>Object.assign({ key:k }, simsObj[k], calcSimulacao(simsObj[k])));
+
+  const check = (ofpData.credito && ofpData.credito.checklist) || {};
+  const checkOk = CHECKLIST_CREDITO.filter((_,idx)=>check['q'+idx]).length;
+
+  let leitura, nivel;
+  if(diag.renda===0 && dividas.length===0){
+    leitura = 'Preencha a renda no Diagnóstico e cadastre as dívidas no Mapa de Dívidas para ver a leitura personalizada.';
+    nivel = 'warn';
+  } else if(pct>30){
+    leitura = 'Perigo: '+fmtPct(pct)+' da renda está comprometida com parcelas (o limite recomendado é 30%). Não contrate nenhum novo crédito agora. O foco é renegociar e quitar as dívidas existentes.';
+    nivel = 'danger';
+  } else if(pct>20){
+    leitura = 'Atenção: '+fmtPct(pct)+' da renda está comprometida com parcelas. Ainda está abaixo do limite de 30%, mas a margem é pequena. Evite novos parcelamentos até reduzir esse percentual.';
+    nivel = 'warn';
+  } else {
+    leitura = 'O comprometimento com parcelas está em '+fmtPct(pct)+', dentro do limite saudável. Mesmo assim, use crédito só com planejamento e sempre compare o CET antes de contratar.';
+    nivel = 'ok';
+  }
+  if(ordem.length){
+    const p = ordem[0];
+    leitura += ' Prioridade de quitação: '+p.credor+' ('+fmtJuros(p.juros)+', saldo de '+brl(p.valor)+').';
+  }
+
+  return { diag, dividas, dividaTotal, parcelas, fonte, pct, situacao, sitCls, metodo, ordem, sims, check, checkOk, leitura, nivel };
+}
+
+function creditoOrdemRows(c){
+  return c.ordem.map((d,idx)=>`<tr><td><strong>${idx+1}º</strong></td><td>${escapeHtml(d.credor)}</td><td>${brl(d.valor)}</td><td>${fmtJuros(d.juros)}</td><td>${brl(d.parcela)}</td></tr>`).join('');
+}
+function metodoTexto(m){
+  return m === 'avalanche'
+    ? 'Avalanche: paga-se o mínimo em todas e direciona-se todo o dinheiro extra para a dívida de maior juros. É a forma que economiza mais dinheiro.'
+    : 'Bola de neve: paga-se o mínimo em todas e direciona-se todo o dinheiro extra para a menor dívida. Cada quitação gera motivação para a próxima.';
+}
+
+function renderCredito(){
+  const c = computeCredito();
+  const nome = nomeClienteAtual();
+  setText('creditoClienteTag', nome);
+  setText('crPrintClienteTag', nome);
+  setText('crPrintNome', nome);
+
+  setText('crDividaTotal', brl(c.dividaTotal));
+  setText('crParcelas', brl(c.parcelas));
+  setValueClass('crPctRenda', fmtPct(c.pct), c.pct>30 ? 'red' : (c.pct>0 && c.pct<=20 ? 'green' : ''));
+  setValueClass('crSituacao', c.situacao, c.sitCls);
+  document.getElementById('crSituacao').style.fontSize = '18px';
+  setText('crFonte', c.parcelas>0 ? 'Parcelas calculadas a partir do '+c.fonte+'. Até 20% da renda: saudável · 20% a 30%: atenção · acima de 30%: perigo.' : 'Até 20% da renda em parcelas: saudável · 20% a 30%: atenção · acima de 30%: perigo.');
+
+  // Simulações
+  const simBody = document.getElementById('crSimBody');
+  simBody.innerHTML = c.sims.map(s=>`
+    <tr>
+      <td>${escapeHtml(s.desc)}</td>
+      <td>${escapeHtml(s.tipo)}</td>
+      <td>${brl(s.valor)}</td>
+      <td>${fmtJuros(s.juros)}</td>
+      <td>${escapeHtml(s.prazo)}</td>
+      <td>${s.parcela===null ? '—' : brl(s.parcela)}</td>
+      <td>${brl(s.total)}</td>
+      <td style="color:var(--red);font-weight:600;">${brl(s.jurosPagos)}</td>
+      <td class="row-actions"><button data-key="${s.key}" class="del-sim">Excluir</button></td>
+    </tr>`).join('');
+  document.getElementById('crSimEmpty').style.display = c.sims.length ? 'none' : 'block';
+  simBody.querySelectorAll('.del-sim').forEach(btn=>{
+    btn.addEventListener('click', function(){
+      db.ref(clienteBasePath()+'/ofp/credito/simulacoes/'+this.dataset.key).remove()
+        .then(()=>showToast('Simulação removida.'));
+    });
+  });
+
+  // Ordem de quitação
+  setText('crMetodoTxt', metodoTexto(c.metodo));
+  document.getElementById('crOrdemBody').innerHTML = creditoOrdemRows(c);
+  document.getElementById('crOrdemEmpty').style.display = c.ordem.length ? 'none' : 'block';
+
+  setText('crChecklistTxt', c.checkOk+' de '+CHECKLIST_CREDITO.length+' respostas "sim".'+(c.checkOk<CHECKLIST_CREDITO.length ? ' Enquanto houver algum "não", o melhor é não contratar.' : ' Decisão tomada com consciência.'));
+  setAlert('crLeitura', c.leitura, c.nivel);
+
+  // Relatório para impressão
+  let html = `<div class="grid grid-4">
+      <div class="stat"><div class="label">Dívida total</div><div class="value red">${brl(c.dividaTotal)}</div></div>
+      <div class="stat"><div class="label">Parcelas por mês</div><div class="value">${brl(c.parcelas)}</div></div>
+      <div class="stat"><div class="label">% da renda</div><div class="value">${fmtPct(c.pct)}</div></div>
+      <div class="stat"><div class="label">Situação</div><div class="value ${c.sitCls}" style="font-size:16px;">${escapeHtml(c.situacao)}</div></div>
+    </div>`;
+  html += `<h3 style="margin-top:24px;">Ordem de quitação (${c.metodo==='avalanche'?'Avalanche — maior juros primeiro':'Bola de neve — menor saldo primeiro'})</h3>`;
+  html += c.ordem.length
+    ? `<table class="orc-print-table"><thead><tr><th>Prioridade</th><th>Credor</th><th>Saldo</th><th>Juros</th><th>Parcela</th></tr></thead><tbody>${creditoOrdemRows(c)}</tbody></table>`
+    : '<p style="font-size:14px;color:var(--muted);">Nenhuma dívida cadastrada no Mapa de Dívidas.</p>';
+  if(c.sims.length){
+    html += `<h3 style="margin-top:24px;">Simulações de crédito</h3>
+      <table class="orc-print-table"><thead><tr><th>Descrição</th><th>Valor</th><th>Juros</th><th>Meses</th><th>Parcela</th><th>Total pago</th></tr></thead><tbody>`;
+    html += c.sims.map(s=>`<tr><td>${escapeHtml(s.desc)}<br><span style="font-size:11.5px;color:var(--muted);">${escapeHtml(s.tipo)} · só de juros: ${brl(s.jurosPagos)}</span></td><td>${brl(s.valor)}</td><td>${fmtJuros(s.juros)}</td><td>${escapeHtml(s.prazo)}</td><td>${s.parcela===null?'—':brl(s.parcela)}</td><td>${brl(s.total)}</td></tr>`).join('');
+    html += '</tbody></table>';
+  }
+  html += '<h3 style="margin-top:24px;">Antes de contratar qualquer crédito</h3><table class="orc-print-table"><tbody>';
+  html += CHECKLIST_CREDITO.map((q,idx)=>`<tr><td>${escapeHtml(q)}</td><td>${c.check['q'+idx] ? '✅ Sim' : '⬜ Ainda não'}</td></tr>`).join('');
+  html += '</tbody></table>';
+  html += `<h3 style="margin-top:24px;">Leitura do crédito</h3><p style="font-size:14px;">${escapeHtml(c.leitura)}</p>`;
+  document.getElementById('crPrintConteudo').innerHTML = html;
+  const parecer = ofpParecer('credito');
+  setText('crPrintParecer', parecer.trim() ? parecer : 'Nenhum parecer preenchido ainda.');
+}
+
+function atualizarPreviewSimulacao(){
+  const s = {
+    tipo: document.getElementById('crTipo').value,
+    valor: document.getElementById('crValor').value,
+    juros: document.getElementById('crJuros').value,
+    prazo: document.getElementById('crPrazo').value
+  };
+  const el = document.getElementById('crPreview');
+  if(!(Number(s.valor)>0) || !(parseInt(s.prazo,10)>0)){ el.style.display = 'none'; return; }
+  const r = calcSimulacao(s);
+  const anual = taxaAnual(s.juros).toFixed(1).replace('.',',');
+  el.style.display = 'block';
+  el.textContent = s.tipo === 'Rotativo / Cheque especial'
+    ? `Se a dívida de ${brl(s.valor)} ficar rolando por ${s.prazo} meses, ela vira ${brl(r.total)}. São ${brl(r.jurosPagos)} só de juros (${anual}% ao ano).`
+    : `${s.prazo} parcelas de ${brl(r.parcela)}. Total pago: ${brl(r.total)}, sendo ${brl(r.jurosPagos)} só de juros (${anual}% ao ano).`;
+}
+
+function gerarTextoCredito(){
+  const c = computeCredito();
+  const parecer = ofpParecer('credito');
+  let txt = '*Crédito Fácil e Perigoso*\n';
+  txt += 'Cliente: '+nomeClienteAtual('Cliente')+'\n';
+  txt += 'Data: '+new Date().toLocaleDateString('pt-BR')+'\n\n';
+  txt += '📊 *Resumo*\n';
+  txt += 'Dívida total: '+brl(c.dividaTotal)+'\n';
+  txt += 'Parcelas por mês: '+brl(c.parcelas)+'\n';
+  txt += '% da renda em parcelas: '+fmtPct(c.pct)+'\n';
+  txt += 'Situação: '+c.situacao+'\n\n';
+  txt += '🎯 *Ordem de quitação* ('+(c.metodo==='avalanche'?'Avalanche':'Bola de neve')+')\n';
+  txt += c.ordem.length ? c.ordem.map((d,idx)=>(idx+1)+'º '+d.credor+': '+brl(d.valor)+' ('+fmtJuros(d.juros)+')').join('\n')+'\n' : 'Nenhuma dívida cadastrada.\n';
+  if(c.sims.length){
+    txt += '\n🧮 *Simulações*\n';
+    txt += c.sims.map(s=>'- '+s.desc+': '+brl(s.valor)+' a '+fmtJuros(s.juros)+' por '+s.prazo+' meses → total '+brl(s.total)+' (juros: '+brl(s.jurosPagos)+')').join('\n')+'\n';
+  }
+  txt += '\n✅ *Checklist antes de contratar:* '+c.checkOk+' de '+CHECKLIST_CREDITO.length+'\n';
+  txt += '\n📝 *Leitura*\n'+c.leitura+'\n\n';
+  txt += '🗒️ *Parecer do Consultor*\n'+(parecer.trim() ? parecer : 'Nenhum parecer preenchido ainda.')+'\n';
+  return txt;
+}
+
+/* ===================================================================
+   PASSO 5 — PLANEJAMENTO FINANCEIRO
+   =================================================================== */
+function computePlanejamento(){
+  const diag = computeDiagnosticoStats();
+  const r = computeReserva();
+  const metasObj = (ofpData.planejamento && ofpData.planejamento.metas) || {};
+  const metas = Object.keys(metasObj).map(k=>{
+    const m = metasObj[k];
+    const valor = Number(m.valor)||0, guardado = Number(m.guardado)||0;
+    const falta = Math.max(valor-guardado, 0);
+    const meses = mesesAte(m.data);
+    let porMes = 0, status = '';
+    if(falta===0){ status = 'Concluída'; }
+    else if(!m.data){ status = 'Sem data'; }
+    else if(meses<=0){ status = 'Prazo vencido'; }
+    else { porMes = falta/meses; }
+    return Object.assign({ key:k }, m, { valor, guardado, falta, meses, porMes, status, pct: valor>0 ? Math.min(guardado/valor*100,100) : 0 });
+  }).sort((a,b)=> (PRAZO_ORDEM.indexOf(a.prazo)-PRAZO_ORDEM.indexOf(b.prazo)) || String(a.data||'').localeCompare(String(b.data||'')));
+
+  const total = metas.reduce((t,m)=>t+m.valor, 0);
+  const aporteMetas = metas.reduce((t,m)=>t+m.porMes, 0);
+  const aporteReserva = r.falta>0 ? r.aporte : 0;
+  const saldo = diag.saldo;
+  const sobra = saldo - aporteReserva - aporteMetas;
+
+  let leitura, nivel;
+  if(!metas.length){
+    leitura = 'Cadastre as metas do cliente (curto, médio e longo prazo) para conferir se o plano cabe no orçamento.';
+    nivel = 'warn';
+  } else if(diag.renda===0){
+    leitura = 'Preencha a renda e as despesas no Diagnóstico para comparar as metas com o saldo mensal disponível.';
+    nivel = 'warn';
+  } else if(sobra<0){
+    leitura = 'O plano ainda não cabe no orçamento: as metas e a reserva pedem '+brl(aporteReserva+aporteMetas)+' por mês, mas o saldo mensal é de '+brl(saldo)+'. Ajuste os prazos, reduza valores ou revise o orçamento.';
+    nivel = 'danger';
+  } else {
+    leitura = 'O plano cabe no orçamento! Depois de separar '+brl(aporteReserva+aporteMetas)+' por mês para a reserva e as metas, ainda sobram '+brl(sobra)+'.';
+    if(r.falta>0) leitura += ' Lembre-se: a reserva de emergência vem antes das metas de médio e longo prazo.';
+    nivel = 'ok';
+  }
+  const vencidas = metas.filter(m=>m.status==='Prazo vencido').length;
+  if(vencidas) leitura += ' Há '+vencidas+(vencidas===1?' meta com prazo vencido':' metas com prazo vencido')+': defina uma nova data.';
+
+  return { diag, metas, total, aporteMetas, aporteReserva, saldo, sobra, leitura, nivel };
+}
+
+function planCapacidadeRows(p){
+  return `<tr><td>Saldo mensal disponível (Diagnóstico)</td><td>${brl(p.saldo)}</td></tr>
+    <tr><td>(−) Reserva de emergência por mês</td><td>${brl(p.aporteReserva)}</td></tr>
+    <tr><td>(−) Metas por mês</td><td>${brl(p.aporteMetas)}</td></tr>
+    <tr class="subtotal"><td>Sobra após o plano</td><td style="color:${p.sobra>=0?'var(--green)':'var(--red)'};">${brl(p.sobra)}</td></tr>`;
+}
+function metaPorMesTxt(m){ return m.status ? m.status : brl(m.porMes); }
+
+function renderPlanejamento(){
+  const p = computePlanejamento();
+  const nome = nomeClienteAtual();
+  setText('planClienteTag', nome);
+  setText('plPrintClienteTag', nome);
+  setText('plPrintNome', nome);
+
+  setText('plQtd', String(p.metas.length));
+  setText('plTotal', brl(p.total));
+  setText('plAporte', brl(p.aporteMetas));
+  setValueClass('plSaldo', brl(p.saldo), p.saldo>=0 ? 'green' : 'red');
+
+  const body = document.getElementById('plBody');
+  body.innerHTML = p.metas.map(m=>`
+    <tr>
+      <td>${escapeHtml(m.desc)}</td>
+      <td>${escapeHtml(m.prazo)}</td>
+      <td>${brl(m.valor)}</td>
+      <td>${brl(m.guardado)}</td>
+      <td style="min-width:110px;"><div class="progress progress-sm"><div style="width:${m.pct}%;"></div></div><span style="font-size:11.5px;color:var(--muted);">${fmtPct(m.pct)}</span></td>
+      <td>${m.data ? formatMonth(m.data) : '—'}</td>
+      <td style="${m.status==='Prazo vencido'?'color:var(--red);':''}font-weight:600;">${metaPorMesTxt(m)}</td>
+      <td class="row-actions"><button data-key="${m.key}" class="edit-btn upd-meta">Atualizar guardado</button><button data-key="${m.key}" class="del-meta">Excluir</button></td>
+    </tr>`).join('');
+  document.getElementById('plEmpty').style.display = p.metas.length ? 'none' : 'block';
+  body.querySelectorAll('.del-meta').forEach(btn=>{
+    btn.addEventListener('click', function(){
+      if(!confirm('Excluir esta meta?')) return;
+      db.ref(clienteBasePath()+'/ofp/planejamento/metas/'+this.dataset.key).remove()
+        .then(()=>showToast('Meta removida.'));
+    });
+  });
+  body.querySelectorAll('.upd-meta').forEach(btn=>{
+    btn.addEventListener('click', function(){
+      const meta = p.metas.find(m=>m.key===this.dataset.key);
+      const resp = prompt('Quanto já está guardado para "'+meta.desc+'"? (R$)', String(meta.guardado).replace('.',','));
+      if(resp===null) return;
+      const valor = parseFloat(String(resp).replace(/\./g,'').replace(',','.'));
+      if(isNaN(valor) || valor<0){ showToast('Valor inválido.'); return; }
+      db.ref(clienteBasePath()+'/ofp/planejamento/metas/'+this.dataset.key+'/guardado').set(valor)
+        .then(()=>showToast('Valor guardado atualizado.'));
+    });
+  });
+
+  document.getElementById('plCapacidadeBody').innerHTML = planCapacidadeRows(p);
+  setAlert('plLeitura', p.leitura, p.nivel);
+
+  // Relatório para impressão
+  let html = `<div class="grid grid-4">
+      <div class="stat"><div class="label">Metas</div><div class="value">${p.metas.length}</div></div>
+      <div class="stat"><div class="label">Valor total</div><div class="value">${brl(p.total)}</div></div>
+      <div class="stat"><div class="label">Guardar/mês</div><div class="value">${brl(p.aporteMetas)}</div></div>
+      <div class="stat"><div class="label">Saldo mensal</div><div class="value ${p.saldo>=0?'green':'red'}">${brl(p.saldo)}</div></div>
+    </div>`;
+  if(p.metas.length){
+    PRAZO_ORDEM.forEach(prazo=>{
+      const grupo = p.metas.filter(m=>m.prazo===prazo);
+      if(!grupo.length) return;
+      html += `<h3 style="margin-top:24px;">${prazo}</h3>
+        <table class="orc-print-table"><thead><tr><th>Meta</th><th>Valor</th><th>Guardado</th><th>Data alvo</th><th>Guardar/mês</th></tr></thead><tbody>`;
+      html += grupo.map(m=>`<tr><td>${escapeHtml(m.desc)}<br><span style="font-size:11.5px;color:var(--muted);">${fmtPct(m.pct)} concluído</span></td><td>${brl(m.valor)}</td><td>${brl(m.guardado)}</td><td>${m.data?formatMonth(m.data):'—'}</td><td>${metaPorMesTxt(m)}</td></tr>`).join('');
+      html += '</tbody></table>';
+    });
+  } else {
+    html += '<p style="font-size:14px;color:var(--muted);margin-top:18px;">Nenhuma meta cadastrada ainda.</p>';
+  }
+  html += `<h3 style="margin-top:24px;">O plano cabe no orçamento?</h3><table class="orc-print-table"><tbody>${planCapacidadeRows(p)}</tbody></table>`;
+  html += `<h3 style="margin-top:24px;">Leitura do planejamento</h3><p style="font-size:14px;">${escapeHtml(p.leitura)}</p>`;
+  document.getElementById('plPrintConteudo').innerHTML = html;
+  const parecer = ofpParecer('planejamento');
+  setText('plPrintParecer', parecer.trim() ? parecer : 'Nenhum parecer preenchido ainda.');
+}
+
+function gerarTextoPlanejamento(){
+  const p = computePlanejamento();
+  const parecer = ofpParecer('planejamento');
+  let txt = '*Planejamento Financeiro*\n';
+  txt += 'Cliente: '+nomeClienteAtual('Cliente')+'\n';
+  txt += 'Data: '+new Date().toLocaleDateString('pt-BR')+'\n\n';
+  if(p.metas.length){
+    PRAZO_ORDEM.forEach(prazo=>{
+      const grupo = p.metas.filter(m=>m.prazo===prazo);
+      if(!grupo.length) return;
+      txt += '🎯 *'+prazo+'*\n';
+      txt += grupo.map(m=>'- '+m.desc+': '+brl(m.valor)+' até '+(m.data?formatMonth(m.data):'—')+' | guardado '+brl(m.guardado)+' | por mês: '+metaPorMesTxt(m)).join('\n')+'\n\n';
+    });
+  } else {
+    txt += 'Nenhuma meta cadastrada ainda.\n\n';
+  }
+  txt += '📊 *O plano cabe no orçamento?*\n';
+  txt += 'Saldo mensal: '+brl(p.saldo)+'\n';
+  txt += 'Reserva por mês: '+brl(p.aporteReserva)+'\n';
+  txt += 'Metas por mês: '+brl(p.aporteMetas)+'\n';
+  txt += 'Sobra após o plano: '+brl(p.sobra)+'\n\n';
+  txt += '📝 *Leitura*\n'+p.leitura+'\n\n';
+  txt += '🗒️ *Parecer do Consultor*\n'+(parecer.trim() ? parecer : 'Nenhum parecer preenchido ainda.')+'\n';
+  return txt;
+}
+
+/* ===================================================================
+   BOTÕES (vinculados uma vez; sempre usam o cliente ativo)
+   =================================================================== */
+function bindParecerOFP(passo, txtId, btnId){
+  document.getElementById(btnId).addEventListener('click', function(){
+    if(!currentClienteId) return;
+    db.ref(clienteBasePath()+'/ofp/'+passo+'/parecer').set({
+      texto: document.getElementById(txtId).value.trim(),
+      atualizadoEm: Date.now()
+    }).then(()=>showToast('Parecer salvo.'));
+  });
+}
+
+function bindCompartilharOFP(prefixo, titulo, gerarTexto){
+  document.getElementById('print'+prefixo+'Btn').addEventListener('click', function(){
+    renderOFP();
+    window.print();
+  });
+  document.getElementById('whatsapp'+prefixo+'Btn').addEventListener('click', function(){
+    window.open('https://wa.me/?text='+encodeURIComponent(gerarTexto()), '_blank');
+  });
+  document.getElementById('email'+prefixo+'Btn').addEventListener('click', function(){
+    const assunto = titulo+' - '+nomeClienteAtual('Cliente');
+    window.location.href = 'mailto:?subject='+encodeURIComponent(assunto)+'&body='+encodeURIComponent(gerarTexto());
+  });
+}
+
+function bindOFPButtons(){
+  // Checklist do crédito
+  document.getElementById('crChecklist').innerHTML = CHECKLIST_CREDITO.map((q,idx)=>
+    `<label><input type="checkbox" data-q="${idx}" /> <span>${escapeHtml(q)}</span></label>`).join('');
+  document.querySelectorAll('#crChecklist input[type=checkbox]').forEach(cb=>{
+    cb.addEventListener('change', function(){
+      if(!currentClienteId) return;
+      db.ref(clienteBasePath()+'/ofp/credito/checklist/q'+this.dataset.q).set(this.checked);
+    });
+  });
+
+  // Reserva
+  document.getElementById('resUsarDiagBtn').addEventListener('click', function(){
+    const s = computeDiagnosticoStats();
+    if(!s.despesas){ showToast('Cadastre as despesas no Diagnóstico primeiro.'); return; }
+    document.getElementById('resEssenciais').value = s.despesas.toFixed(2);
+    showToast('Despesas do diagnóstico aplicadas. Ajuste se necessário e clique em Salvar.');
+  });
+  document.getElementById('resSalvarBtn').addEventListener('click', function(){
+    if(!currentClienteId) return;
+    const config = {
+      essenciais: parseFloat(document.getElementById('resEssenciais').value)||0,
+      meses: parseInt(document.getElementById('resMeses').value,10)||6,
+      aporte: parseFloat(document.getElementById('resAporte').value)||0,
+      local: document.getElementById('resLocal').value.trim(),
+      atualizadoEm: Date.now()
+    };
+    const guardado = parseFloat(document.getElementById('resGuardadoInput').value)||0;
+    Promise.all([
+      db.ref(clienteBasePath()+'/ofp/reserva/config').set(config),
+      db.ref(clienteBasePath()+'/diagnostico/reserva').set(guardado)
+    ]).then(()=>showToast('Reserva de emergência salva.'));
+  });
+
+  // Crédito
+  ['crTipo','crValor','crJuros','crPrazo'].forEach(id=>{
+    document.getElementById(id).addEventListener('input', atualizarPreviewSimulacao);
+    document.getElementById(id).addEventListener('change', atualizarPreviewSimulacao);
+  });
+  document.getElementById('crAddBtn').addEventListener('click', function(){
+    if(!currentClienteId) return;
+    const tipo = document.getElementById('crTipo').value;
+    const desc = document.getElementById('crDesc').value.trim() || tipo;
+    const valor = parseFloat(document.getElementById('crValor').value);
+    const juros = parseFloat(document.getElementById('crJuros').value)||0;
+    const prazo = parseInt(document.getElementById('crPrazo').value,10);
+    if(!valor || !prazo){ showToast('Preencha valor e meses.'); return; }
+    db.ref(clienteBasePath()+'/ofp/credito/simulacoes').push({ tipo, desc, valor, juros, prazo, criadoEm: Date.now() })
+      .then(()=>{
+        ['crDesc','crValor','crJuros','crPrazo'].forEach(id=>document.getElementById(id).value='');
+        atualizarPreviewSimulacao();
+        showToast('Simulação salva.');
+      });
+  });
+  document.getElementById('crMetodo').addEventListener('change', function(){
+    if(!currentClienteId) return;
+    db.ref(clienteBasePath()+'/ofp/credito/metodo').set(this.value);
+  });
+
+  // Planejamento
+  document.getElementById('plAddBtn').addEventListener('click', function(){
+    if(!currentClienteId) return;
+    const desc = document.getElementById('plDesc').value.trim();
+    const prazo = document.getElementById('plPrazo').value;
+    const valor = parseFloat(document.getElementById('plValor').value);
+    const guardado = parseFloat(document.getElementById('plGuardado').value)||0;
+    const data = document.getElementById('plData').value;
+    if(!desc || !valor){ showToast('Preencha a meta e o valor.'); return; }
+    if(!data){ showToast('Informe a data alvo da meta.'); return; }
+    db.ref(clienteBasePath()+'/ofp/planejamento/metas').push({ desc, prazo, valor, guardado, data, criadoEm: Date.now() })
+      .then(()=>{
+        ['plDesc','plValor','plGuardado','plData'].forEach(id=>document.getElementById(id).value='');
+        showToast('Meta adicionada.');
+      });
+  });
+
+  // Pareceres
+  bindParecerOFP('reserva', 'resParecer', 'resParecerBtn');
+  bindParecerOFP('credito', 'crParecer', 'crParecerBtn');
+  bindParecerOFP('planejamento', 'plParecer', 'plParecerBtn');
+
+  // Imprimir / Enviar
+  bindCompartilharOFP('Res', 'Reserva de Emergência', gerarTextoReserva);
+  bindCompartilharOFP('Cr', 'Crédito Fácil e Perigoso', gerarTextoCredito);
+  bindCompartilharOFP('Pl', 'Planejamento Financeiro', gerarTextoPlanejamento);
+}
+
 /* ---------------- INIT ALL LISTENERS (escopados ao cliente ativo) ---------------- */
 function initDataListeners(){
   if(!currentClienteId) return;
@@ -1737,6 +2809,7 @@ function initDataListeners(){
   initDividas();
   initDashboardCasal();
   initEvolucao();
+  initOFP();
 }
 </script>
 </body>
